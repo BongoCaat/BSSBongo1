@@ -10,7 +10,8 @@ task.spawn(function()
             if promptOverlay then
                 local errorPrompt = promptOverlay:FindFirstChild("ErrorPrompt")
                 if errorPrompt and errorPrompt:FindFirstChild('MessageArea') and errorPrompt.MessageArea:FindFirstChild("ErrorFrame") then
-                    game:Shutdown()
+                while true do
+                game:Shutdown()
                 end
             end
         end
