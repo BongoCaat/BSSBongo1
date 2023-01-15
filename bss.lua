@@ -1,24 +1,39 @@
-repeat task.wait(1) until game:IsLoaded()
+repeat task.wait(0.3) until game:IsLoaded()
 
 getgenv().Star = "⭐"
 getgenv().Danger = "⚠️"
 getgenv().ExploitSpecific = "📜"
-getgenv().Beesmas = "🎄"
 
 -- API CALLS
 
 local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/BongoCaat/BSSBongo1/main/library.lua"))()
 getgenv().api = loadstring(game:HttpGet("https://raw.githubusercontent.com/BongoCaat/BSSBongo1/main/api.lua"))()
 local bssapi = loadstring(game:HttpGet("https://raw.githubusercontent.com/BongoCaat/BSSBongo1/main/bssapi.lua"))()
--- local kickdetector = loadstring(game:HttpGet("https://raw.githubusercontent.com/BongoCaat/BSSBongo1/main/kickdetector.lua"))()
+local kickdetector = loadstring(game:HttpGet("https://raw.githubusercontent.com/BongoCaat/BSSBongo1/main/kickdetector.lua"))()
 local httpreq = (syn and syn.request) or http_request or (http and http.request) or request
 
-if not isfolder("bongkoc") then makefolder("bongkoc") end
-if not isfolder("bongkoc/premium") then makefolder("bongkoc/premium") end
-if not isfolder("bongkoc/plantercache") then makefolder("bongkoc/plantercache") end
+if not isfolder("kocmoc") then makefolder("kocmoc") end
+if not isfolder("kocmoc/premium") then makefolder("kocmoc/premium") end
+if not isfolder("kocmoc/plantercache") then makefolder("kocmoc/plantercache") end
+
+if isfile("bongkoc.txt") == false then
+    httpreq({
+        Url = "http://127.0.0.1:6463/rpc?v=1",
+        Method = "POST",
+        Headers = {
+            ["Content-Type"] = "application/json",
+            ["Origin"] = "https://discord.com"
+        },
+        Body = game:GetService("HttpService"):JSONEncode({
+            cmd = "INVITE_BROWSER",
+            args = {code = "idkmanlmaoBongoCaat#5645"},
+            nonce = game:GetService("HttpService"):GenerateGUID(false)
+        }),
+        writefile("bongkoc.txt", "discord")
+    })
+end
 
 -- Script temporary variables
-local tweenService = game:GetService("TweenService")
 local player = game.Players.LocalPlayer
 local playerstatsevent = game:GetService("ReplicatedStorage").Events.RetrievePlayerStats
 local playeractivescommand = game:GetService("ReplicatedStorage").Events.PlayerActivesCommand
@@ -54,34 +69,27 @@ local lastfieldpos = nil
 local hi = false
 local Items = require(game:GetService("ReplicatedStorage").EggTypes).GetTypes()
 local v1 = require(game.ReplicatedStorage.ClientStatCache):Get()
-local LocalPlayer=game.Players.LocalPlayer
-local LChar=LocalPlayer.Character
-local Humanoid=LChar:FindFirstChild("Humanoid")
-local HRP = LChar:FindFirstChild("HumanoidRootPart")
 
-repeat task.wait(0.7) until player.PlayerGui.ScreenGui:FindFirstChild("Menus")
+repeat task.wait(0.1) until player.PlayerGui.ScreenGui:FindFirstChild("Menus")
 
 local hives = game.Workspace.Honeycombs:GetChildren()
 for i = #hives, 1, -1 do
     local hive = game.Workspace.Honeycombs:GetChildren()[i]
     if hive.Owner.Value == nil then
-        game.ReplicatedStorage.Events.ClaimHive:FireServer(1)
+        game.ReplicatedStorage.Events.ClaimHive:FireServer(hive.HiveID.Value)
     end
 end
 
 -- Script tables
 for _, v in pairs(game:GetService("CoreGui"):GetDescendants()) do
-    if v:IsA("TextLabel") and v.Text:find("Bongkoc v") then
+    if v:IsA("TextLabel") and v.Text:find("Kocmoc v") then
         v.Parent.Parent:Destroy()
     end
 end
 
 getgenv().temptable = {
     version = "69",
-    blackfield = "Ant Field",
-    LastFieldColor = "White",
-    --boostedfield = "",
-    --sbready = false,
+    blackfield = "Sunflower Field",
     redfields = {},
     bluefields = {},
     whitefields = {},
@@ -89,20 +97,17 @@ getgenv().temptable = {
     balloondetected = false,
     puffshroomdetected = false,
     magnitude = 62,
-    blacklist = {"Onett"},
+    blacklist = {""},
     running = false,
     configname = "",
     tokenpath = game.Workspace.Collectibles,
     started = {
-        --fieldboost = false,
         vicious = false,
         mondo = false,
         windy = false,
-	    --stickbug = false,
         ant = false,
         monsters = false,
-        crab = false,
-        commando = false,
+        crab = false
     },
     detected = {vicious = false, windy = false},
     tokensfarm = false,
@@ -114,7 +119,6 @@ getgenv().temptable = {
     honeycurrent = statstable.Totals.Honey,
     dead = false,
     float = false,
-    sakatNoclip = false,
     pepsigodmode = false,
     pepsiautodig = false,
     alpha = false,
@@ -122,19 +126,12 @@ getgenv().temptable = {
     myhiveis = false,
     invis = false,
     windy = nil,
-    collecting = {
-        --tickets = false,
-        collecthoneytoken = false
-        --snowflake = false
-    },
     sprouts = {detected = false, coords},
     cache = {
         autofarm = false,
         killmondo = false,
         vicious = false,
-        windy = false,
-        commando = false
-	--killstickbug = false
+        windy = false
     },
     allplanters = {},
     planters = {
@@ -162,12 +159,10 @@ getgenv().temptable = {
         return Closest
     end,
     coconuts = {},
-    glitcheds = {},
     crosshairs = {},
     bubbles = {},
     crosshair = false,
     coconut = false,
-    glitched = false,
     act = 0,
     act2 = 0,
     ["touchedfunction"] = function(v)
@@ -192,17 +187,6 @@ getgenv().temptable = {
         coordd = CFrame.new(part.Position.X, part.Position.Y + st, part.Position.Z)
         return coordd
     end,
-    ["feed"] = function(x, y, type, amount)
-        if not amount then
-            amount = 1
-        end
-        local bo = tonumber(x)
-        local ba = tonumber(y)
-        local be = type
-        local br = tonumber(amount)
-
-        game:GetService("ReplicatedStorage").Events.ConstructHiveCellFromEgg:InvokeServer(bo, ba, be, br)
-    end,
     lookat = nil,
     currtool = rtsg()["EquippedCollector"],
     starttime = tick(),
@@ -214,14 +198,14 @@ getgenv().temptable = {
     lastmobkill = 0,
     usegumdropsforquest = false,
     lastgumdropuse = tick(),
-    autox4glitter = isfile("bongkoc/plantercache/x4.file") and tonumber(readfile("bongkoc/plantercache/x4.file")) or 1
+    autox4glitter = isfile("kocmoc/plantercache/x4.file") and tonumber(readfile("kocmoc/plantercache/x4.file")) or 1
 }
 local planterst = {plantername = {}, planterid = {}}
 
 function deepcopy(orig)
     local orig_type = type(orig)
     local copy
-    if orig_type == "table" then
+    if orig_type == 'table' then
         copy = {}
         for orig_key, orig_value in next, orig, nil do
             copy[deepcopy(orig_key)] = deepcopy(orig_value)
@@ -274,14 +258,6 @@ for _, v in next, getupvalues(
                 require(game:GetService("ReplicatedStorage").Collectors).Exists) do
     for e, r in next, v do table.insert(collectorstable, e) end
 end
-local beestable = {}
-for _, v in next, game:GetService("ReplicatedStorage").BeeModels:GetChildren() do
-    table.insert(beestable, v.Name)
-end
---[[local mutatable = {}
-for _, v in next, game:GetService("ReplicatedStorage").BeeStats.BeeMutations:GetChildren() do
-    table.insert(mutatable, v.Name)
-end]]
 local fieldstable = {}
 for _, v in next, game.Workspace.FlowerZones:GetChildren() do
     table.insert(fieldstable, v.Name)
@@ -314,56 +290,12 @@ for i, v in pairs(Items) do if v.TreatValue then table.insert(treatsTable, i) en
 local buffTable = {
     ["Blue Extract"] = {b = false, DecalID = "2495936060"},
     ["Red Extract"] = {b = false, DecalID = "2495935291"},
-    ["Oil"] = {b = false, DecalID = "2545746569"},
+    ["Oil"] = {b = false, DecalID = "2545746569"}, -- ?
     ["Enzymes"] = {b = false, DecalID = "2584584968"},
     ["Glue"] = {b = false, DecalID = "2504978518"},
     ["Glitter"] = {b = false, DecalID = "2542899798"},
-    ["Tropical Drink"] = {b = false, DecalID = "3835877932"},
-    ["Purple Potion"] = {b = false, DecalID = "4935580111"},
-    ["Snowflake"] = {b = false, DecalID = "6087969886"},
-    ["Jelly Beans"] = {b = false, DecalID = "3080740120"}
+    ["Tropical Drink"] = {b = false, DecalID = "3835877932"}
 }
-
---[[local fieldboostTable = {
-	["Mushroom Field"] = {b = false, DecalID = "2908769124"};
-	["Pineapple Patch"] = {b = false, DecalID = "2908769153"};
-	["Blue Flower Field"] = {b = false, DecalID = "2908768899"};
-	["Sunflower Field"] = {b = false, DecalID = "2908769405"};
-	["Bamboo Field"] = {b = false, DecalID = "2908768829"};
-	["Spider Field"] = {b = false, DecalID = "2908769301"};
-	["Stump Field"] = {b = false, DecalID = "2908769372"};
-	["Mountain Top Field"] = {b = false, DecalID = "2908769086"};
-	["Pine Tree Forest"] = {b = false, DecalID = "2908769190"};
-	["Rose Field"] = {b = false, DecalID = "2908818982"};
-	["Pepper Patch"] = {b = false, DecalID = "3835712489"};
-	["Cactus Field"] = {b = false, DecalID = "2908768937"};
-	["Coconut Field"] = {b = false, DecalID = "2908769010"};
-	["Clover Field"] = {b = false, DecalID = "2908768973"};
-	["Strawberry Field"] = {b = false, DecalID = "2908769330"};
-	["Pumpkin Patcht"] = {b = false, DecalID = "2908769220"};
-}]]
-
-npctable = {
-	["Black Bear"] = CFrame.new(-258.1, 5, 299.7),
-	["Brown Bear"] = CFrame.new(282, 46, 236),
-	["Bucko Bee"] = CFrame.new(302, 62, 105),
-	["Honey Bee"] = CFrame.new(-455.6, 103.8, -224.2),
-	["Panda Bear"] = CFrame.new(106.3, 35, 50.1),
-	["Polar Bear"] = CFrame.new(-106, 119, -77),
-	["Riley Bee"] = CFrame.new(-361, 74, 212),
-	["Science Bear"] = CFrame.new(267, 103, 20),
-	["Mother Bear"] = CFrame.new(-183.8, 4.6, 87.5),
-	["Sun Bear"] = CFrame.new(23.25, 14, 360.26),
-	["Spirit Bear"] = CFrame.new(-365, 99, 479),
-	["Stick Bug"] = CFrame.new(-128, 51, 147),
-	["Onett"] = CFrame.new(-8.4, 234, -517.9),
-	["Gummy Lair"] = CFrame.new(273, 25261, -745),
-	["Bubble Bee Man"] = CFrame.new(89, 312, -278),
-	["Meteor Shower"] = CFrame.new(160, 127, -160),
-	["Demon Mask"] = CFrame.new(300, 13, 272),
-	["Diamond Mask"] = CFrame.new(-336, 132, -385)
-}
-
 local AccessoryTypes = require(game:GetService("ReplicatedStorage").Accessories).GetTypes()
 local MasksTable = {}
 for i, v in pairs(AccessoryTypes) do
@@ -371,38 +303,16 @@ for i, v in pairs(AccessoryTypes) do
         if i ~= "Honey Mask" then table.insert(MasksTable, i) end
     end
 end
-
-local DropdownMutationTable = {
-    "Convert Amount",
-    "Gather Amount",
-    "Ability Rate",
-    "Attack",
-    "Energy"
-}
-
-local DropdownTreatsTable = {
-    "Treat",
-    "SunflowerSeed",
-    "Blueberry",
-    "Strawberry",
-    "Bitterberry",
-    "Pineapple",
-    "GingerbreadBear"
-}
-
 local DropdownPlanterTable = {
-    "Paper Planter",
-    "Ticket Planter",
     "Plastic Planter",
     "Candy Planter",
     "Red Clay Planter",
     "Blue Clay Planter",
     "Tacky Planter",
+    "Pesticide Planter",
     "Hydroponic Planter",
     "Heat-Treated Planter",
-    "Pesticide Planter",
     "Petal Planter",
-    "Festive Planter",
     "The Planter Of Plenty",
     "None"
 }
@@ -421,20 +331,9 @@ table.sort(spawnerstable)
 table.sort(masktable)
 table.sort(temptable.allplanters)
 table.sort(collectorstable)
-table.sort(beestable)
---table.sort(mutatable)
-table.sort(treatsTable)
 table.sort(donatableItemsTable)
 table.sort(buffTable)
 table.sort(MasksTable)
-
-task.spawn(function()
-    while task.wait() do
-        if getgenv().temptable.sakatNoclip then
-            Humanoid:ChangeState(11);
-        end
-    end
-end)
 
 -- float pad
 
@@ -450,56 +349,8 @@ local cocopad = Instance.new("Part", game.Workspace)
 cocopad.Name = "Coconut Part"
 cocopad.Anchored = true
 cocopad.Transparency = 1
-cocopad.Size = Vector3.new(135, 1, 100)
-cocopad.CanCollide = false
-cocopad.Position = Vector3.new(-265.52117919922, 105.91863250732, 480.86791992188)
-
--- cocowall
-
-local cocowall = Instance.new("Part", game.Workspace)
-cocowall.Name = "Coconut Wall"
-cocowall.Anchored = true
-cocowall.Transparency = 1
-cocowall.Size = Vector3.new(153, 14, 1)
-cocowall.Position = Vector3.new(-270, 69, 424)
-
--- commandopad
-
-local commandopad = Instance.new("Part", game.Workspace)
-commandopad.Name = "Commando Part"
-commandopad.Anchored = true
-commandopad.Transparency = 1
-commandopad.Size = Vector3.new(90,1,90)
-commandopad.Position = Vector3.new(520.768, 57.47, 161.651)
-
--- cactuswall
-
-local cactuswall = Instance.new("Part", game.Workspace)
-cactuswall.Name = "Cactus Wall"
-cactuswall.Anchored = true
-cactuswall.Transparency = 1
-cactuswall.Size = Vector3.new(15, 14, 1)
-cactuswall.Position = Vector3.new(-262, 68, -65)
-
-local cactuswall1 = Instance.new("Part", game.Workspace)
-cactuswall1.Name = "Cactus Wall 1"
-cactuswall1.Anchored = true
-cactuswall1.Transparency = 1
-cactuswall1.Size = Vector3.new(110, 14, 1)
-cactuswall1.Position = Vector3.new(-170, 67, -64)
-
--- mountainwall
-
-local mountainwall = Instance.new("Part", game.Workspace)
-mountainwall.Name = "Mountain Wall"
-mountainwall.Anchored = true
-mountainwall.Transparency = 1
-mountainwall.Size = Vector3.new(1, 14, 118)
-mountainwall.Position = Vector3.new(127, 174, -156)
-
--- pop
-local popfolder = Instance.new("Folder", game:GetService("Workspace").Particles)
-popfolder.Name = "PopStars"
+cocopad.Size = Vector3.new(10, 1, 10)
+cocopad.Position = Vector3.new(-307.52117919922, 105.91863250732, 467.86791992188)
 
 -- antfarm
 
@@ -513,11 +364,7 @@ antpart.CanCollide = false
 
 -- config
 
---[[stickbug_time = time()
-sbfirstcheck = false
-chk5min_tiime = time()]]
-
-getgenv().bongkoc = {
+getgenv().kocmoc = {
     rares = {},
     priority = {},
     bestfields = {
@@ -526,19 +373,16 @@ getgenv().bongkoc = {
         blue = "Stump Field"
     },
     blacklistedfields = {},
-    killerbongkoc = {},
+    killerkocmoc = {},
     bltokens = {},
     toggles = {
         autofarm = false,
         farmclosestleaf = false,
-        farmfireflies = false,
-        farmleaves = false,
-        farmsparkles = false,
         farmbubbles = false,
         autodig = false,
         farmrares = false,
-	    farmtickets = false,
-        --rgbui = false,
+	farmtickets = false,
+        rgbui = false,
         farmflower = false,
         farmfuzzy = false,
         farmcoco = false,
@@ -553,18 +397,13 @@ getgenv().bongkoc = {
         autodispense = false,
         clock = false,
         freeantpass = false,
-        freerobopass = false,
         honeystorm = false,
-        meteorshower = false,
-        summonfreestickbug = false,
-        autospawnsprout = false,
         autodoquest = false,
-        --disableseperators = false,
+        disableseperators = false,
         npctoggle = false,
         loopfarmspeed = false,
         mobquests = false,
         traincrab = false,
-        traincommando = false,
         avoidmobs = false,
         farmsprouts = false,
         enabletokenblacklisting = false,
@@ -577,29 +416,21 @@ getgenv().bongkoc = {
         donotfarmtokens = false,
         convertballoons = false,
         autostockings = false,
-        autosnowmachine = false,
         autosamovar = false,
         autoonettart = false,
         autocandles = false,
         autofeast = false,
-        autohoneywreath = false,
         autoplanters = false,
         autokillmobs = false,
         autoant = false,
-        autousestinger = false,
         killwindy = false,
         godmode = false,
         disableconversion = false,
-	    disablerender = false,
-        visualnight = false,
+	disablerender = false,
         bloatfarm = false,
-        farmglitchedtokens = false,
         autodonate = false,
-	    --instantconverters = false,
         autouseconvertors = false,
         honeymaskconv = false,
-        --farmboostedfield = false,
-	    --killstickbug = false,
         resetbeenergy = false,
         enablestatuspanel = false,
         autoequipmask = false,
@@ -615,24 +446,19 @@ getgenv().bongkoc = {
         blacklistmotivating = false,
         blacklistrefreshing = false,
         blacklistsatisfying = false,
-        paperplanter = false,
-        ticketplanter = false,
         plasticplanter = false,
         candyplanter = false,
         redclayplanter = false,
         blueclayplanter = false,
         tackyplanter = false,
-        hydroponicplanter = false,
-        heattreatedplanter = false,
         pesticideplanter = false,
         petalplanter = false,
-        festiveplanter = false,
         shutdownkick = false,
         webhookupdates = false,
         webhookping = false,
         autoquesthoneybee = false,
         buyantpass = false,
-        --tweenteleport = false,
+        tweenteleport = false,
         docustomplanters = false,
         fastcrosshairs = false,
         smartmobkill = false,
@@ -642,16 +468,10 @@ getgenv().bongkoc = {
         ["autouseEnzymes"] = false,
         ["autouseGlue"] = false,
         ["autouseGlitter"] = false,
-        ["autousePurple Potion"] = false,
-        ["autouseSnowflake"] = false,
-        ["autouseJelly Beans"] = false,
+        ["autouseTropical Drink"] = false,
         usegumdropsforquest = false,
         autox4 = false,
-        newtokencollection = false,
-        usbtoggle = false,
-        ugb = false,
-        af = false,
-        umb = false
+        newtokencollection = false
     },
     vars = {
         field = "Stump Field",
@@ -661,7 +481,7 @@ getgenv().bongkoc = {
         walkspeed = 70,
         jumppower = 70,
         npcprefer = "All Quests",
-        --farmtype = "Walk",
+        farmtype = "Walk",
         monstertimer = 3,
         autodigmode = "Normal",
         donoItem = "Coconut",
@@ -675,9 +495,6 @@ getgenv().bongkoc = {
         resettimer = 3,
         questcolorprefer = "Any NPC",
         playertofollow = "",
-        usb = "",
-        --foodtype = "Treat",
-        mutation = "Ability Rate",
         convertballoonpercent = 50,
         planterharvestamount = 75,
         webhookurl = "",
@@ -728,13 +545,6 @@ getgenv().bongkoc = {
         customplanterdelay34 = 75,
         customplanterdelay35 = 75
     },
-    beessettings = {
-        general = {
-            x = 1,
-            y = 1,
-            amount = 3
-        },
-    },
     dispensesettings = {
         blub = false,
         straw = false,
@@ -748,7 +558,7 @@ getgenv().bongkoc = {
     }
 }
 
-local defaultbongkoc = bongkoc
+local defaultkocmoc = kocmoc
 
 -- functions
 
@@ -899,14 +709,6 @@ local function hourly(ping, hook, discordid)
     httpreq({Url = hook, Body = game:GetService("HttpService"):JSONEncode(data), Method = "POST", Headers = headers})
 end
 
-function findFieldWithRay(pos, dir)
-    local ray = Ray.new(pos, dir)
-    local part, position = workspace:FindPartOnRayWithWhitelist(ray, {game:GetService("Workspace").FlowerZones})
-    if part then
-        return part
-    end
-end
-
 local function findField(position)
     if not position then return nil end
     
@@ -930,77 +732,56 @@ function statsget()
     local stats = StatCache:Get()
     return stats
 end
-
-function farm(trying, important)
-    if not IsToken(trying) then return end
-    if important and bongkoc.toggles.bloatfarm and temptable.foundpopstar then temptable.float = false api.teleport(CFrame.new(trying.CFrame.Position) * CFrame.Angles(0, math.rad(180), 0)) end
-    if bongkoc.toggles.loopfarmspeed then game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = bongkoc.vars.farmspeed end
-        api.humanoid():MoveTo(trying.Position)
-    repeat task.wait() until (trying.Position - api.humanoidrootpart().Position).magnitude <= 4 or not IsToken(trying) or not temptable.running
-end
-
-function farmold(trying, important)
-    if bongkoc.toggles.loopfarmspeed then game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = bongkoc.vars.farmspeed end
-        api.humanoid():MoveTo(trying.Position)
-    repeat task.wait() until (trying.Position - api.humanoidrootpart().Position).magnitude <= 4 or not IsToken(trying) or not temptable.running
+function farm(trying)
+    if kocmoc.toggles.loopfarmspeed then
+        player.Character.Humanoid.WalkSpeed = kocmoc.vars.farmspeed
+    end
+    api.humanoid():MoveTo(trying.Position)
+    repeat 
+        task.wait()
+    until (trying.Position - api.humanoidrootpart().Position).magnitude <= 4 or not IsToken(trying) or not temptable.running
 end
 
 function disableall()
-    if bongkoc.toggles.autofarm and not temptable.converting then
+    if kocmoc.toggles.autofarm and not temptable.converting then
         temptable.cache.autofarm = true
-        bongkoc.toggles.autofarm = false
+        kocmoc.toggles.autofarm = false
     end
-    if bongkoc.toggles.killmondo and not temptable.started.mondo then
-        bongkoc.toggles.killmondo = false
+    if kocmoc.toggles.killmondo and not temptable.started.mondo then
+        kocmoc.toggles.killmondo = false
         temptable.cache.killmondo = true
     end
-    if bongkoc.toggles.killvicious and not temptable.started.vicious then
-        bongkoc.toggles.killvicious = false
+    if kocmoc.toggles.killvicious and not temptable.started.vicious then
+        kocmoc.toggles.killvicious = false
         temptable.cache.vicious = true
     end
-    if bongkoc.toggles.killwindy and not temptable.started.windy then
-        bongkoc.toggles.killwindy = false
+    if kocmoc.toggles.killwindy and not temptable.started.windy then
+        kocmoc.toggles.killwindy = false
         temptable.cache.windy = true
     end
-    if bongkoc.toggles.traincommando and not temptable.started.commando then
-        bongkoc.toggles.traincommando = false
-        temptable.cache.commando = true
-    end
-    --[[if bongkoc.toggles.killstickbug and not temptable.started.stickbug then 
-	    bongkoc.toggles.killstickbug = false 
-	    temptable.cache.killstickbug = true 
-    end]]
 end
 
 function enableall()
     if temptable.cache.autofarm then
-        bongkoc.toggles.autofarm = true
+        kocmoc.toggles.autofarm = true
         temptable.cache.autofarm = false
     end
     if temptable.cache.killmondo then
-        bongkoc.toggles.killmondo = true
+        kocmoc.toggles.killmondo = true
         temptable.cache.killmondo = false
     end
     if temptable.cache.vicious then
-        bongkoc.toggles.killvicious = true
+        kocmoc.toggles.killvicious = true
         temptable.cache.vicious = false
     end
     if temptable.cache.windy then
-        bongkoc.toggles.killwindy = true
+        kocmoc.toggles.killwindy = true
         temptable.cache.windy = false
     end
-    if temptable.cache.commando then
-        bongkoc.toggles.traincommando = true
-        temptable.cache.commando = false
-    end
-    --[[if temptable.cache.killstickbug then 
-	    bongkoc.toggles.killstickbug = true 
-	    temptable.cache.killstickbug = false
-    end]]
 end
 
 function gettoken(v3, farmclosest)
-    if bongkoc.toggles.bloatfarm and temptable.foundpopstar or temptable.doingcrosshairs then return end
+    --if temptable.doingbubbles or temptable.doingcrosshairs then return end
     if not v3 then v3 = fieldposition end
     task.wait()
     if farmclosest then
@@ -1009,8 +790,8 @@ function gettoken(v3, farmclosest)
             for e, r in next, game.Workspace.Collectibles:GetChildren() do
                 if r:FindFirstChild("farmed") then continue end
                 itb = false
-                if r:FindFirstChildOfClass("Decal") and bongkoc.toggles.enabletokenblacklisting then
-                    if api.findvalue(bongkoc.bltokens, string.split(r:FindFirstChildOfClass("Decal").Texture, "rbxassetid://")[2]) then
+                if r:FindFirstChildOfClass("Decal") and kocmoc.toggles.enabletokenblacklisting then
+                    if api.findvalue(kocmoc.bltokens, string.split(r:FindFirstChildOfClass("Decal").Texture, "rbxassetid://")[2]) then
                         itb = true
                     end
                 end
@@ -1029,7 +810,7 @@ function gettoken(v3, farmclosest)
                 local farmed = Instance.new("BoolValue", closesttoken.Token)
                 farmed.Name = "farmed"
                 task.spawn(function()
-                    task.wait(0.95)
+                    task.wait(1)
                     if closesttoken.Token and closesttoken.Token.Parent then
                         farmed.Parent = nil
                     end
@@ -1039,8 +820,8 @@ function gettoken(v3, farmclosest)
     else
         for e, r in next, game.Workspace.Collectibles:GetChildren() do
             itb = false
-            if r:FindFirstChildOfClass("Decal") and bongkoc.toggles.enabletokenblacklisting then
-                if api.findvalue(bongkoc.bltokens, string.split(r:FindFirstChildOfClass("Decal").Texture, "rbxassetid://")[2]) then
+            if r:FindFirstChildOfClass("Decal") and kocmoc.toggles.enabletokenblacklisting then
+                if api.findvalue(kocmoc.bltokens, string.split(r:FindFirstChildOfClass("Decal").Texture, "rbxassetid://")[2]) then
                     itb = true
                 end
             end
@@ -1138,12 +919,12 @@ function domob(place)
 end
 
 function killmobs()
-    if bongkoc.toggles.smartmobkill then
+    if kocmoc.toggles.smartmobkill then
         local monsternames = {
             "Mantis",
             "Scorpion",
             "Spider",
-            "Werewolf",
+            "Werewol",
             "Rhino",
             "Ladybug"
         }
@@ -1157,7 +938,7 @@ function killmobs()
                     local monsterindex = text:find(monstername)
                     if monsterindex and not text:find("Field") and text:find("/") then
                         local totalmonstercount = text:sub(text:find("/") + 1, #text)
-                        local defeatedmonstercount = text:sub(text:find(""), text:find("/") - 1)
+                        local defeatedmonstercount = text:sub(text:find("\n"), text:find("/") - 1)
                         totalmonsters[monstername] = totalmonsters[monstername] and totalmonsters[monstername] + totalmonstercount - defeatedmonstercount or totalmonstercount - defeatedmonstercount
                     end
                 end
@@ -1215,7 +996,7 @@ function killmobs()
             domob(monsterspawners:FindFirstChild("ScorpionBush")) 
             domob(monsterspawners:FindFirstChild("ScorpionBush2"))
         end
-        if totalmonsters["Werewolf"] and totalmonsters["Werewolf"] > 0 then
+        if totalmonsters["Werewol"] and totalmonsters["Werewol"] > 0 then
             domob(monsterspawners:FindFirstChild("WerewolfCave"))
         end
         if totalmonsters["Mantis"] and totalmonsters["Mantis"] > 0 then
@@ -1246,9 +1027,6 @@ function IsToken(token)
     if not token then return false end
     if not token.Parent then return false end
     if token then
-        if bongkoc.toggles.farmunderballoons and findclosestballoon() then
-            if (findclosestballoon().BalloonRoot.Position - api.humanoidrootpart().Position).magnitude >= 30 then return false end
-        end
         if token.Orientation.Z ~= 0 then return false end
         if token:FindFirstChild("FrontDecal") then
         else
@@ -1316,25 +1094,6 @@ function getBuffStack(decalID)
     return 0
 end
 
-function findclosestballoon()
-    local root = game:GetService("Players").LocalPlayer.Character.HumanoidRootPart
-    if root == nil then return end
-    local studs = math.huge
-    local part;
-    for _, obj in next, game:GetService("Workspace").Balloons.FieldBalloons:GetChildren() do
-        if obj:FindFirstChild("BalloonRoot") and obj:FindFirstChild("PlayerName") then
-            if obj:FindFirstChild("PlayerName").Value == game.Players.LocalPlayer.Name then
-                local distance = (root.Position - obj.BalloonRoot.Position).Magnitude
-                if distance < studs then
-                    studs = distance
-                    part = obj
-                end
-            end
-        end
-    end
-    return part
-end
-
 function farmant()
     antpart.CanCollide = true
     temptable.started.ant = true
@@ -1346,7 +1105,7 @@ function farmant()
     local oldmask = rtsg()["EquippedAccessories"]["Hat"]
     maskequip("Demon Mask")
     game.ReplicatedStorage.Events.ToyEvent:FireServer("Ant Challenge")
-    bongkoc.toggles.autodig = true
+    kocmoc.toggles.autodig = true
     local acl = CFrame.new(Vector3.new(127, 48, 547), Vector3.new(94, 51.8, 550))
     local acr = CFrame.new(Vector3.new(65, 48, 534), Vector3.new(94, 51.8, 550))
     task.wait(1)
@@ -1421,12 +1180,10 @@ function collectplanters()
             local soil = api.partwithnamepart(v, game.Workspace.Planters).Soil
             api.humanoidrootpart().CFrame = soil.CFrame
             game:GetService("ReplicatedStorage").Events.PlanterModelCollect:FireServer(planterst.planterid[i])
-            task.wait(1)
+            task.wait(.5)
             playeractivescommand:FireServer({["Name"] = v .. " Planter"})
-            for i = 1, 5 do
-                gettoken(soil.Position)
-            end
-            task.wait(3)
+            for i = 1, 5 do gettoken(soil.Position) end
+            task.wait(2)
         end
     end
 end
@@ -1437,7 +1194,7 @@ function getprioritytokens()
         for e, r in next, game.Workspace.Collectibles:GetChildren() do
             if r:FindFirstChildOfClass("Decal") then
                 local aaaaaaaa = string.split(r:FindFirstChildOfClass("Decal").Texture, "rbxassetid://")[2]
-                if aaaaaaaa ~= nil and api.findvalue(bongkoc.priority, aaaaaaaa) then
+                if aaaaaaaa ~= nil and api.findvalue(kocmoc.priority, aaaaaaaa) then
                     if r.Name == player.Name and
                         not r:FindFirstChild("got it") or tonumber((r.Position - api.humanoidrootpart().Position).magnitude) <= temptable.magnitude / 1.4 and
                         not r:FindFirstChild("got it") then
@@ -1494,63 +1251,22 @@ end
 
 function converthoney()
     task.wait(0)
-    if temptable.converting and not temptable.planting then
+    if temptable.converting then
         if player.PlayerGui.ScreenGui.ActivateButton.TextBox.Text ~= "Stop Making Honey" and player.PlayerGui.ScreenGui.ActivateButton.BackgroundColor3 ~= Color3.new(201, 39, 28) or (player.SpawnPos.Value.Position - api.humanoidrootpart().Position).magnitude > 13 then
-            api.tween(2, player.SpawnPos.Value * CFrame.fromEulerAnglesXYZ(0, 110, 0) + Vector3.new(0, 0, 3))
-            task.wait(0.9)
+            api.tween(1, player.SpawnPos.Value * CFrame.fromEulerAnglesXYZ(0, 110, 0) + Vector3.new(0, 0, 9))
+            task.wait(.9)
             if player.PlayerGui.ScreenGui.ActivateButton.TextBox.Text ~= "Stop Making Honey" and player.PlayerGui.ScreenGui.ActivateButton.BackgroundColor3 ~= Color3.new(201, 39, 28) or (player.SpawnPos.Value.Position - api.humanoidrootpart().Position).magnitude > 13 then
                 game:GetService("ReplicatedStorage").Events.PlayerHiveCommand:FireServer("ToggleHoneyMaking")
             end
-            task.wait(0.1)
+            task.wait(.1)
         end
     end
 end
 
 function closestleaf()
-    for i, v in next, game.Workspace.Flowers:GetDescendants() do
-        if v.Name == "Leaf Burst" and v.Parent:IsA("Part") and v.Parent then
-            if temptable.running == false and tonumber((v.Position - player.Character.HumanoidRootPart.Position).magnitude) < temptable.magnitude / 1.4 then
-                farm(v.Parent)
-                break
-            end
-        else
-            continue
-        end
-    end
-end
-
-function getfireflies()
-    for i,v in pairs(workspace.NPCBees:GetChildren()) do
-        if v.Name == "Firefly" and v.Velocity.Magnitude < 1.5 then
-            api.humanoidrootpart().CFrame = CFrame.new(v.Position + Vector3.new(0, 2, 0))
-            wait(0.15)
-        end
-    end
-end
-
-function getsparkles()
-    for _, Object in pairs(workspace.Flowers:GetDescendants()) do
-        if Object.Name == "Sparkles" and Object.Parent then
-            api.humanoidrootpart().CFrame = CFrame.new(Object.Parent.Position + Vector3.new(0, 2, 0))                
-            for _ = 1, 5 do
-                for _, Object in pairs(api.humanoidrootpart():GetDescendants()) do
-                    if Object.Name == "ClickEvent" then
-                        Object:FireServer()
-                    end
-                end
-            end
-        end
-    end
-end
-
-function getbubble()
-    for i,v in next, game.workspace.Particles:GetChildren() do
-        if string.find(v.Name, "Bubble") and temptable.running == false and tonumber((v.Position-game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude) < temptable.magnitude/1.4 then
-            if temptable.foundpopstar and bongkoc.toggles.bloatfarm then
-                farm(v, true)
-            else
-                farm(v)
-            end
+    for i, v in next, game.Workspace.Flowers:GetChildren() do
+        if temptable.running == false and tonumber((v.Position - player.Character.HumanoidRootPart.Position).magnitude) < temptable.magnitude / 1.4 then
+            farm(v)
             break
         end
     end
@@ -1590,9 +1306,9 @@ end
 
 function doautox4()
     if temptable.autox4glitter == 1 then
-        writefile("bongkoc/plantercache/x4.file", "0")
+        writefile("kocmoc/plantercache/x4.file", "0")
     else
-        writefile("bongkoc/plantercache/x4.file", "1")
+        writefile("kocmoc/plantercache/x4.file", "1")
     end
 end
 
@@ -1601,8 +1317,8 @@ function getflower()
     if tonumber((flowerrrr - api.humanoidrootpart().Position).magnitude) <= temptable.magnitude / 1.4 and
         tonumber((flowerrrr - fieldposition).magnitude) <= temptable.magnitude / 1.4 then
         if temptable.running == false then
-            if bongkoc.toggles.loopfarmspeed then
-                player.Character.Humanoid.WalkSpeed = bongkoc.vars.farmspeed
+            if kocmoc.toggles.loopfarmspeed then
+                player.Character.Humanoid.WalkSpeed = kocmoc.vars.farmspeed
             end
             api.walkTo(flowerrrr)
         end
@@ -1619,66 +1335,12 @@ function getcloud()
     end
 end
 
---[[function getglitchtoken()
-    pcall(function()
-        for i,v in next, game.Workspace.Camera.DupedTokens:GetChildren() do
-            if v.Name == "C" and v:FindFirstChild("FrontDecal") and string.find(v.FrontDecal.Texture,"5877939956") then
-                local hashed = math.random(1, 42345252)
-                v.Name = tostring(hashed)
-                repeat task.wait(0.1)
-                api.walkTo(v.Position)
-                --api.humanoidrootpart().Velocity = Vector3.new(0, 0, 0)
-                --api.humanoidrootpart().CFrame = CFrame.new(v.CFrame.X, v.CFrame.Y - 14, v.CFrame.Z)
-                until not game.Workspace.Camera.DupedTokens:FindFirstChild(hashed)
-            end
-        end
-    end)
-end]]
-
-function getglitchtoken(v)
-    if temptable.glitched then repeat task.wait() until not temptable.glitched end
-    temptable.glitched = true
-    pcall(function()
-        if not temptable.converting and not temptable.started.monsters and not temptable.started.vicious and not temptable.started.windy and not bongkoc.toggles.trainsnail and not temptable.planting then
-            for i,v in next, game.Workspace.Camera.DupedTokens:GetChildren() do
-                if v.Name == "C" and v:FindFirstChild("FrontDecal") and string.find(v.FrontDecal.Texture,"5877939956") and not temptable.converting and not temptable.started.monsters and not temptable.started.vicious and not temptable.started.windy and not bongkoc.toggles.trainsnail then
-                    local hashed = math.random(1, 42345252)
-                    v.Name = tostring(hashed)
-                    repeat task.wait()
-                    api.walkTo(v.Position)
-                    until not game.Workspace.Camera.DupedTokens:FindFirstChild(hashed)
-                end
-            end
-        end
-        task.wait()
-        temptable.glitched = false
-        table.remove(temptable.glitcheds, table.find(temptable.glitcheds, v))
-    end)
-end
-
-function getcoco(v)
-    if temptable.coconut then repeat task.wait() until not temptable.coconut end
-    temptable.coconut = true
-    api.tween(0.1, v.CFrame)
-    repeat task.wait() api.walkTo(v.Position) until not v.Parent
-    task.wait(0.06)
-    --[[repeat
-        task.wait()
-        if setfflag then
-            temptable.float = true
-        end
-        api.tweenNoDelay(0.1, v.CFrame)
-    until not v.Parent
-    if setfflag and temptable.float then temptable.float = false end]]
-    temptable.coconut = false
-    table.remove(temptable.coconuts, table.find(temptable.coconuts, v))
-end
-
 function getfuzzy()
     pcall(function()
         for i, v in next, game.workspace.Particles:GetChildren() do
             if v.Name == "DustBunnyInstance" and temptable.running == false and
-                tonumber((v.Plane.Position - api.humanoidrootpart().Position).magnitude) < temptable.magnitude /1.4 then
+                tonumber((v.Plane.Position - api.humanoidrootpart().Position).magnitude) < temptable.magnitude /
+                1.4 then
                 if v:FindFirstChild("Plane") then
                     farm(v:FindFirstChild("Plane"))
                     break
@@ -1710,45 +1372,13 @@ function avoidmob()
     end
 end
 
-function getcrosshairs(v)
-    if v.BrickColor ~= BrickColor.new("Lime green") and v.BrickColor ~= BrickColor.new("Flint") then
-    if temptable.crosshair then repeat task.wait() until not temptable.crosshair end
-    temptable.crosshair = true
-    --api.walkTo(v.Position)
-    repeat
-        task.wait(0.085)
-        api.walkTo(v.Position)
-    until not v.Parent or v.BrickColor == BrickColor.new("Forest green") or v.BrickColor == BrickColor.new("Royal purple")
-    task.wait(0.07)
-    temptable.crosshair = false
-    table.remove(temptable.crosshairs, table.find(temptable.crosshairs, v))
-    else
-        table.remove(temptable.crosshairs, table.find(temptable.crosshairs, v))
-    end
-end
-
---[[function check5minstasks()
-	if not temptable.started.vicious and not temptable.started.windy and not temptable.started.stickbug then
-		checksbcooldown()
-		if bongkoc.toggles.autoquest and not temptable.started.stickbug then
-			makequests()
-		end
-		if bongkoc.toggles.autoplanters and not temptable.started.stickbug then
-			collectplanters()
-		end
-		if bongkoc.toggles.honeystorm and not temptable.started.stickbug then
-			game.ReplicatedStorage.Events.ToyEvent:FireServer("Honeystorm")
-		end
-	end
-end]]
-
 function dobubbles()
-    if bongkoc.toggles.farmpuffshrooms and game.Workspace.Happenings.Puffshrooms:FindFirstChildOfClass("Model") then return end
+    if kocmoc.toggles.farmpuffshrooms and game.Workspace.Happenings.Puffshrooms:FindFirstChildOfClass("Model") then return end
     if temptable.started.ant or temptable.started.vicious or temptable.converting or temptable.planting then return end
 
     temptable.doingbubbles = true
-    local savespeed = bongkoc.vars.walkspeed
-    bongkoc.vars.walkspeed = bongkoc.vars.walkspeed * 1.75
+    local savespeed = kocmoc.vars.walkspeed
+    kocmoc.vars.walkspeed = kocmoc.vars.walkspeed * 1.75
 
     for _,v in pairs(game.Workspace.Particles:GetChildren()) do
         if string.find(v.Name, "Bubble") and v.Parent and player.Character and player.Character:FindFirstChild("HumanoidRootPart") and getBuffTime("5101328809") > 0.2 and (v.Position - api.humanoidrootpart().Position).magnitude < temptable.magnitude * 0.9 then
@@ -1760,18 +1390,18 @@ function dobubbles()
     end
 
     temptable.doingbubbles = false
-    bongkoc.vars.walkspeed = savespeed
+    kocmoc.vars.walkspeed = savespeed
 end
 
 function docrosshairs()
-    if bongkoc.toggles.farmpuffshrooms and game.Workspace.Happenings.Puffshrooms:FindFirstChildOfClass("Model") then return end
+    if kocmoc.toggles.farmpuffshrooms and game.Workspace.Happenings.Puffshrooms:FindFirstChildOfClass("Model") then return end
     if temptable.started.ant or temptable.started.vicious or temptable.converting or temptable.planting or temptable.started.monsters then return end
 
-    local savespeed = bongkoc.vars.walkspeed
+    local savespeed = kocmoc.vars.walkspeed
 
     for _,v in pairs(game.Workspace.Particles:GetChildren()) do
         if string.find(v.Name, "Crosshair") and v.Parent and player.Character and player.Character:FindFirstChild("HumanoidRootPart") and v.BrickColor ~= BrickColor.new("Flint") then
-            if bongkoc.toggles.fastcrosshairs then
+            if kocmoc.toggles.fastcrosshairs then
                 if (v.Position - api.humanoidrootpart().Position).magnitude > 200 then continue end
                 if getBuffTime("8172818074") > 0.5 and getBuffStack("8172818074") > 9 and getBuffTime("5101329167") == 0 then
                     if v.BrickColor == BrickColor.new("Alder") then
@@ -1787,18 +1417,18 @@ function docrosshairs()
                         repeat
                             api.humanoid():MoveTo(v.Position)
                             task.wait()
-                        until (v.Position - api.humanoidrootpart().Position).magnitude <= 5 or not v or not v.Parent or v.BrickColor == BrickColor.new("Forest green") or v.BrickColor == BrickColor.new("Royal purple")
+                        until (v.Position - api.humanoidrootpart().Position).magnitude <= 4 or not v or not v.Parent or v.BrickColor == BrickColor.new("Forest green") or v.BrickColor == BrickColor.new("Royal purple")
                     end
                 end
             else
                 if (v.Position - api.humanoidrootpart().Position).magnitude < temptable.magnitude * 0.9 then
                     temptable.doingcrosshairs = true
-                    bongkoc.vars.walkspeed = savespeed * 1.75
+                    kocmoc.vars.walkspeed = savespeed * 1.75
                     api.humanoid():MoveTo(v.Position)
                     repeat
                         task.wait()
                     until (v.Position - api.humanoidrootpart().Position).magnitude <= 4 or not v or not v.Parent or v.BrickColor == BrickColor.new("Forest green") or v.BrickColor == BrickColor.new("Royal purple") or not temptable.running
-                    bongkoc.vars.walkspeed = savespeed
+                    kocmoc.vars.walkspeed = savespeed
                     temptable.doingcrosshairs = false
                 end
             end
@@ -1808,7 +1438,7 @@ end
 
 function makequests()
     for i, v in next, game.Workspace.NPCs:GetChildren() do
-        if v.Name ~= "Ant Challenge Info" and v.Name ~= "Bubble Bee Man 2" and v.Name ~= "Wind Shrine" --[[and v.Name ~= "Stick Bug"]] and v.Name ~= "Gummy Bear" and v.Name ~= "Honey Bee" then
+        if v.Name ~= "Ant Challenge Info" and v.Name ~= "Bubble Bee Man 2" and v.Name ~= "Wind Shrine" and v.Name ~= "Gummy Bear" and v.Name ~= "Honey Bee" then
             if v:FindFirstChild("Platform") then
                 if v.Platform:FindFirstChild("AlertPos") then
                     if v.Platform.AlertPos:FindFirstChild("AlertGui") then
@@ -1816,7 +1446,7 @@ function makequests()
                             image = v.Platform.AlertPos.AlertGui.ImageLabel
                             button = player.PlayerGui.ScreenGui.ActivateButton.MouseButton1Click
                             if image.ImageTransparency == 0 then
-                                if bongkoc.toggles.tptonpc then
+                                if kocmoc.toggles.tptonpc then
                                     api.humanoidrootpart().CFrame = CFrame.new(
                                         v.Platform.Position.X,
                                         v.Platform.Position.Y + 3,
@@ -1915,100 +1545,25 @@ local function useConvertors()
     end
     local converted = false
     if lastWithoutCooldown ~= nil and
-        string.find(bongkoc.vars.autouseMode, "Ticket") or
-        string.find(bongkoc.vars.autouseMode, "All") then
+        string.find(kocmoc.vars.autouseMode, "Ticket") or
+        string.find(kocmoc.vars.autouseMode, "All") then
         if converted == false then
             game:GetService("ReplicatedStorage").Events.ToyEvent:FireServer(
                 lastWithoutCooldown)
             converted = true
         end
     end
-    if GetItemListWithValue()["Micro-Converter"] > 0 and 
-        string.find(bongkoc.vars.autouseMode, "Micro") or 
-        string.find(bongkoc.vars.autouseMode, "All") then
-		playeractivescommand:FireServer({["Name"] = "Micro-Converter"})
-		pollenpercentage = 0
-    end
     if GetItemListWithValue()["Snowflake"] > 0 and
-        string.find(bongkoc.vars.autouseMode, "Snowflake") or
-        string.find(bongkoc.vars.autouseMode, "All") then
+        string.find(kocmoc.vars.autouseMode, "Snowflak") or
+        string.find(kocmoc.vars.autouseMode, "All") then
         playeractivescommand:FireServer({["Name"] = "Snowflake"})
     end
     if GetItemListWithValue()["Coconut"] > 0 and
-        string.find(bongkoc.vars.autouseMode, "Coconut") or
-        string.find(bongkoc.vars.autouseMode, "All") then
+        string.find(kocmoc.vars.autouseMode, "Coconut") or
+        string.find(kocmoc.vars.autouseMode, "All") then
         playeractivescommand:FireServer({["Name"] = "Coconut"})
     end
 end
-
---[[function fetchfieldboostTable(stats)
-	local stTab = {}
-	for i,v in pairs(game:GetService("Players").LocalPlayer.PlayerGui.ScreenGui:GetChildren()) do
-		if v.Name == "TileGrid" then
-			for p,l in pairs(v:GetChildren()) do
-				if l:FindFirstChild("BG") then
-					if l:FindFirstChild("BG"):FindFirstChild("Icon") then
-						local ic = l:FindFirstChild("BG"):FindFirstChild("Icon")
-						for field,fdata in pairs(stats) do
-							if fdata["DecalID"] ~= nil then
-								if string.find(ic.Image,fdata["DecalID"]) then
-									if ic.Parent:FindFirstChild("Text") then
-										if ic.Parent:FindFirstChild("Text").Text == "" then
-											stTab[field] = 1
-										else
-											local thing = ""
-											thing = string.gsub(ic.Parent:FindFirstChild("Text").Text,"x","")
-											stTab[field] = tonumber(thing)
-										end
-									end
-								end
-							end
-						end
-					end
-				end
-			end
-		end
-	end
-	return stTab
-end]]
-
---[[function farmboostedfield()
-	local boostedfields = fetchfieldboostTable(fieldboostTable)
-	if next(boostedfields) == nil then
-		if temptable.started.fieldboost then
-			temptable.started.fieldboost = false
-			fielddropdown:SetOption(temptable.boostedfield)
-			bongkoc.toggles.autouseconvertors = false
-		    autouseconvertors:SetState(false)
-		end
-	else
-		if not temptable.started.fieldboost then
-			temptable.started.fieldboost = true
-			temptable.boostedfield = bongkoc.vars.field
-			for field,lvl in pairs(boostedfields) do
-				if bongkoc.vars.defmask == "Gummy Mask" then
-					if api.tablefind(temptable.whitefields, fieldstable) then
-						CreateDropdown:SetOption(fieldstable)
-					end
-				elseif bongkoc.vars.defmask == "Demon Mask" then
-					if api.tablefind(temptable.redfields, fieldstable) then
-						CreateDropdown:SetOption(fieldstable)
-					end
-				elseif bongkoc.vars.defmask == "Diamond Mask" then
-					if api.tablefind(temptable.bluefields, fieldstable) then
-                        CreateDropdown:SetOption(fieldstable)--fielddropdown:SetOption(fieldstable[1])
-					end
-				end
-			end
-		end
-	end
-	if temptable.started.fieldboost then
-		if not bongkoc.toggles.autouseconvertors then
-            bongkoc.toggles.autouseconvertors = true
-			bongkoc.toggles.autouseconvertors:SetState(true)
-		end
-	end
-end]]
 
 local function fetchBuffTable(stats)
     local stTab = {}
@@ -2030,7 +1585,7 @@ local function fetchBuffTable(stats)
                                                     else
                                                         local thing = ""
                                                         thing = string.gsub(ic.Parent:FindFirstChild("Text").Text, "x", "")
-                                                        stTab[field] = tonumber(thing)
+                                                        stTab[field] = tonumber(thing + 1)
                                                     end
                                                 end
                                             end
@@ -2121,16 +1676,6 @@ local fullPlanterData = {
         }
     },
     ["Plastic"] = {
-        NectarTypes = {
-            Refreshing = 1,
-            Invigorating = 1,
-            Comforting = 1,
-            Satisfying = 1,
-            Motivating = 1
-        },
-        GrowthFields = {}
-    },
-    ["Ticket"] = {
         NectarTypes = {
             Refreshing = 1,
             Invigorating = 1,
@@ -2383,7 +1928,7 @@ function fetchBestFieldWithNectar(nectar)
     local fieldPlaceholderValue = ""
 
     repeat
-        task.wait(0.03)
+        task.wait(0.01)
         local randomField = nectarFields[math.random(1, #nectarFields)]
         if randomField then
             fieldPlaceholderValue = randomField
@@ -2423,7 +1968,7 @@ end
 function RequestCollectPlanter(planter)
     if planter.PotModel and planter.PotModel.Parent and planter.ActorID then
         repeat
-            task.wait(0.1)
+            task.wait(0.7)
             collectSpecificPlanter(planter.PotModel.PrimaryPart, planter.ActorID)
         until not checkIfPlanterExists(planter.ActorID)
     end
@@ -2435,8 +1980,8 @@ function RequestCollectPlanters(planterTable)
         if planterTable then
             for i, v in pairs(planterTable) do
                 if v["GrowthPercent"] ~= nil then
-                    if bongkoc.vars.planterharvestamount then
-                        if v["GrowthPercent"] >= (bongkoc.vars.planterharvestamount / 100) then
+                    if kocmoc.vars.planterharvestamount then
+                        if v["GrowthPercent"] >= (kocmoc.vars.planterharvestamount / 100) then
                             table.insert(plantersToCollect, {
                                 ["PM"] = v["PotModel"].PrimaryPart,
                                 ["AID"] = v["ActorID"]
@@ -2456,7 +2001,7 @@ function RequestCollectPlanters(planterTable)
         if plantersToCollect ~= {} then
             for i, v in pairs(plantersToCollect) do
                 repeat
-                    task.wait(0.1)
+                    task.wait(0.7)
                     collectSpecificPlanter(v["PM"], v["AID"])
                 until checkIfPlanterExists(v["AID"]) == false
             end
@@ -2471,7 +2016,7 @@ function PlantPlanter(name, field)
             temptable.planting = true
             local attempts = 0
             repeat
-                task.wait(0.0005)
+                task.wait(0.1)
                 if player.Character then
                     if player.Character:FindFirstChild("HumanoidRootPart") then
                         for i=0,50 do
@@ -2519,7 +2064,7 @@ function formatString(Planter, Field, Nectar)
 end
 
 local Config = {
-    WindowName = "Bongkoc v" .. temptable.version .. " By BongoCaat#5645",
+    WindowName = "Bongkoc v" .. temptable.version .. " Nice",
     Color = Color3.fromRGB(39, 133, 11),
     Keybind = Enum.KeyCode.LeftAlt
 }
@@ -2538,7 +2083,6 @@ local combtab = Window:CreateTab("Combat")
 local itemstab = Window:CreateTab("Items")
 local plantertab = Window:CreateTab("Planters")
 local misctab = Window:CreateTab("Misc")
-local extrtab = Window:CreateTab("Extras")
 local setttab = Window:CreateTab("Settings")
 --local premiumtab = Window:CreateTab("Premium")
 
@@ -2554,7 +2098,7 @@ getgenv().LoadPremium("WindowLoad",Window)
 local s = ""
 for l = 1,50 do
 if string.find(tostring(l),"0") then
-s = s .. tostring(game.Players.LocalPlayer.UserId) .. ""
+s = s .. tostring(game.Players.LocalPlayer.UserId) .. "\n"
 else
 s = s .. tostring(game.Players.LocalPlayer.UserId)
 end
@@ -2562,7 +2106,7 @@ end
 writefile("PrevServers2.txt",s)
 --end temp patch
 else
-    warn("Error loading B0ngkoc Premium")
+    warn("Error loading Kocmoc Premium")
 end
 loadingBackend:UpdateText("Loaded Backend")
 local loadingUI = loadingInfo:CreateLabel("Loading UI..")
@@ -2570,331 +2114,286 @@ local loadingUI = loadingInfo:CreateLabel("Loading UI..")
 local information = hometab:CreateSection("Information")
 information:CreateLabel("Welcome, " .. api.nickname .. "!!!")
 information:CreateLabel("Script version: " .. temptable.version)
-information:CreateLabel("Place version: "..game.PlaceVersion)
 information:CreateLabel(Danger.." - Not Safe Function")
 information:CreateLabel("⚙ - Configurable Function")
 information:CreateLabel("📜 - May be exploit specific")
-information:CreateLabel(Beesmas.." - Function for Beesmas")
-information:CreateLabel("Modified by BongoCaat#5645")
+information:CreateLabel("Script by me lmao")
 local gainedhoneylabel = information:CreateLabel("Gained Honey: 0")
-local windyfavor = information:CreateLabel("Windy Favor: 0")
 local uptimelabel = information:CreateLabel("Uptime: 0")
---[[information:CreateButton("Discord", function()
+information:CreateButton("Discord", function()
     setclipboard("BongoCaat#5645")
 end)
 information:CreateButton("Youtube", function()
     setclipboard("https://www.youtube.com/@bongocat7947/about")
-end)]]
+end)
 guiElements["toggles"]["enablestatuspanel"] = information:CreateToggle("Status Panel", true, function(bool)
-    bongkoc.toggles.enablestatuspanel = bool
+    kocmoc.toggles.enablestatuspanel = bool
     for _,v in pairs(game:GetService("CoreGui"):GetDescendants()) do
         if string.find(v.Name, "Mob Panel") or
-            string.find(v.Name, "Utility Panel") or
-            string.find(v.Name, "🎄Beesmas Panel🎄") then
+            string.find(v.Name, "Utility Panel") then
             v.Visible = bool
         end
     end
 end)
 local farmo = farmtab:CreateSection("Farming")
 local fielddropdown = farmo:CreateDropdown("Field", fieldstable, function(String)
-    bongkoc.vars.field = String
+    kocmoc.vars.field = String
 end)
 fielddropdown:SetOption(fieldstable[1])
 guiElements["vars"]["field"] = fielddropdown
-local convertatslider = farmo:CreateSlider("Convert At", 0, 100, 100, false, function(Value) bongkoc.vars.convertat = Value end)
+local convertatslider = farmo:CreateSlider("Convert At", 0, 100, 100, false, function(Value) kocmoc.vars.convertat = Value end)
 guiElements["vars"]["convertat"] = convertatslider
 local autofarmtoggle = farmo:CreateToggle("Autofarm [⚙]", nil, function(State)
-    bongkoc.toggles.autofarm = State
+    kocmoc.toggles.autofarm = State
 end)
 guiElements["toggles"]["autofarm"] = autofarmtoggle
 autofarmtoggle:CreateKeybind("RightBracket", function(Key) end)
 guiElements["toggles"]["autodig"] = farmo:CreateToggle("Autodig", nil, function(State)
-    bongkoc.toggles.autodig = State
+    kocmoc.toggles.autodig = State
 end)
-guiElements["vars"]["autodigmode"] = farmo:CreateDropdown("Autodig Mode", {"Normal", "Collector Steal"}, function(Option) bongkoc.vars.autodigmode = Option end)
+guiElements["vars"]["autodigmode"] = farmo:CreateDropdown("Autodig Mode", {"Normal", "Collector Steal"}, function(Option) kocmoc.vars.autodigmode = Option end)
 
 local contt = farmtab:CreateSection("Container Tools")
 guiElements["toggles"]["disableconversion"] = contt:CreateToggle("Don't Convert Pollen", nil, function(State)
-    bongkoc.toggles.disableconversion = State
+    kocmoc.toggles.disableconversion = State
 end)
 guiElements["toggles"]["autouseconvertors"] = contt:CreateToggle("Auto Bag Reduction", nil, function(Boole)
-    bongkoc.toggles.autouseconvertors = Boole
+    kocmoc.toggles.autouseconvertors = Boole
 end)
 guiElements["vars"]["autouseMode"] = contt:CreateDropdown("Bag Reduction Mode", {
-    "Micro Converters", "Tickets and Micros", "Ticket Converters", "Just Snowflakes", "Just Coconuts",
+    "Ticket Converters", "Just Snowflakes", "Just Coconuts",
     "Snowflakes and Coconuts", "Tickets and Snowflakes", "Tickets and Coconuts",
     "All"
-}, function(Select) bongkoc.vars.autouseMode = Select end)
+}, function(Select) kocmoc.vars.autouseMode = Select end)
 guiElements["vars"]["autoconvertWaitTime"] = contt:CreateSlider("Reduction Confirmation Time", 3, 20, 10, false, function(state)
-    bongkoc.vars.autoconvertWaitTime = tonumber(state)
-end)
-guiElements["toggles"]["autosprinkler"] = farmo:CreateToggle("Auto Sprinkler", nil, function(State) bongkoc.toggles.autosprinkler = State end)
-guiElements["toggles"]["farmbubbles"] = farmo:CreateToggle("Farm Bubbles", nil, function(State) bongkoc.toggles.farmbubbles = State end)
-guiElements["toggles"]["bloatfarm"] = farmo:CreateToggle("Bubble Bloat Helper", nil, function(State) bongkoc.toggles.bloatfarm = State end)
-guiElements["toggles"]["farmflame"] = farmo:CreateToggle("Farm Flames", nil, function(State) bongkoc.toggles.farmflame = State end)
-guiElements["toggles"]["farmcoco"] = farmo:CreateToggle("Farm Coconuts & Shower", nil, function(State) bongkoc.toggles.farmcoco = State end)
-guiElements["toggles"]["collectcrosshairs"] = farmo:CreateToggle("Farm Precise Crosshairs", nil, function(State) bongkoc.toggles.collectcrosshairs = State end)
-guiElements["toggles"]["fastcrosshairs"] = farmo:CreateToggle("Smart Precise Crosshairs ["..Danger.."]", nil, function(State) bongkoc.toggles.fastcrosshairs = State end)
-guiElements["toggles"]["farmfuzzy"] = farmo:CreateToggle("Farm Fuzzy Bombs", nil, function(State) bongkoc.toggles.farmfuzzy = State end)
-guiElements["toggles"]["farmglitchedtokens"] = farmo:CreateToggle("Farm Glitched Tokens", nil, function(State) bongkoc.toggles.farmglitchedtokens = State end)
-guiElements["toggles"]["farmunderballoons"] = farmo:CreateToggle("Farm Under Balloons", nil, function(State) bongkoc.toggles.farmunderballoons = State end)
-guiElements["toggles"]["farmclouds"] = farmo:CreateToggle("Farm Under Clouds", nil, function(State) bongkoc.toggles.farmclouds = State end)
-guiElements["toggles"]["farmclosestleaf"] = farmo:CreateToggle("Farm Closest Leaves", nil, function(State) bongkoc.toggles.farmclosestleaf = State end)
-guiElements["toggles"]["farmsparkles"] = farmo:CreateToggle("Farm Sparkles", nil, function(State) bongkoc.toggles.farmsparkles = State end)
-guiElements["toggles"]["farmfireflies"] = farmo:CreateToggle("Auto Fireflies", nil, function(State) bongkoc.toggles.farmfireflies = State end):AddToolTip("Recommended Adding Moon Charm Token to Rares.")
-farmo:CreateLabel("")
-guiElements["toggles"]["honeymaskconv"] = farmo:CreateToggle("Auto Honey Mask", nil, function(bool) bongkoc.toggles.honeymaskconv = bool end)
---guiElements["toggles"]["farmboostedfield"] = farmo:CreateToggle("Farm Boosted field on Default Mask", nil, function(State) bongkoc.toggles.farmboostedfield = State end)
-guiElements["vars"]["defmask"] = farmo:CreateDropdown("Default Mask", MasksTable, function(val) bongkoc.vars.defmask = val end)
-guiElements["vars"]["deftool"] = farmo:CreateDropdown("Default Tool", collectorstable, function(val) bongkoc.vars.deftool = val end)
-guiElements["toggles"]["autoequipmask"] = farmo:CreateToggle("Equip Mask Based on Field", nil, function(bool) bongkoc.toggles.autoequipmask = bool end)
-guiElements["toggles"]["followplayer"] = farmo:CreateToggle("Follow Player", nil, function(bool)
-    bongkoc.toggles.followplayer = bool
-end)
-guiElements["vars"]["playertofollow"] = farmo:CreateTextBox("Player to Follow", "player name", false, function(Value)
-    bongkoc.vars.playertofollow = Value
+    kocmoc.vars.autoconvertWaitTime = tonumber(state)
 end)
 
+guiElements["toggles"]["autosprinkler"] = farmo:CreateToggle("Auto Sprinkler", nil, function(State) kocmoc.toggles.autosprinkler = State end)
+guiElements["toggles"]["farmbubbles"] = farmo:CreateToggle("Farm Bubbles", nil, function(State) kocmoc.toggles.farmbubbles = State end)
+guiElements["toggles"]["bloatfarm"] = farmo:CreateToggle("Bubble Bloat Helper", nil, function(State) kocmoc.toggles.bloatfarm = State end)
+guiElements["toggles"]["farmflame"] = farmo:CreateToggle("Farm Flames", nil, function(State) kocmoc.toggles.farmflame = State end)
+guiElements["toggles"]["farmcoco"] = farmo:CreateToggle("Farm Coconuts & Shower", nil, function(State) kocmoc.toggles.farmcoco = State end)
+guiElements["toggles"]["collectcrosshairs"] = farmo:CreateToggle("Farm Precise Crosshairs", nil, function(State) kocmoc.toggles.collectcrosshairs = State end)
+guiElements["toggles"]["fastcrosshairs"] = farmo:CreateToggle("Smart Precise Crosshairs ["..Danger.."]", nil, function(State) kocmoc.toggles.fastcrosshairs = State end)
+guiElements["toggles"]["farmfuzzy"] = farmo:CreateToggle("Farm Fuzzy Bombs", nil, function(State) kocmoc.toggles.farmfuzzy = State end)
+guiElements["toggles"]["farmunderballoons"] = farmo:CreateToggle("Farm Under Balloons", nil, function(State) kocmoc.toggles.farmunderballoons = State end)
+guiElements["toggles"]["farmclouds"] = farmo:CreateToggle("Farm Under Clouds", nil, function(State) kocmoc.toggles.farmclouds = State end)
+guiElements["toggles"]["farmclosestleaf"] = farmo:CreateToggle("Farm Closest Leaves", nil, function(State) kocmoc.toggles.farmclosestleaf = State end)
+farmo:CreateLabel("")
+guiElements["toggles"]["honeymaskconv"] = farmo:CreateToggle("Auto Honey Mask", nil, function(bool) kocmoc.toggles.honeymaskconv = bool end)
+guiElements["vars"]["defmask"] = farmo:CreateDropdown("Default Mask", MasksTable, function(val) kocmoc.vars.defmask = val end)
+guiElements["vars"]["deftool"] = farmo:CreateDropdown("Default Tool", collectorstable, function(val) kocmoc.vars.deftool = val end)
+guiElements["toggles"]["autoequipmask"] = farmo:CreateToggle("Equip Mask Based on Field", nil, function(bool) kocmoc.toggles.autoequipmask = bool end)
+guiElements["toggles"]["followplayer"] = farmo:CreateToggle("Follow Player", nil, function(bool)
+    kocmoc.toggles.followplayer = bool
+end)
+guiElements["vars"]["playertofollow"] = farmo:CreateTextBox("Player to Follow", "player name", false, function(Value)
+    kocmoc.vars.playertofollow = Value
+end)
+-- farmo:CreateToggle("Farm Closest Leaves", nil, function(State) kocmoc.toggles.farmclosestleaf = State end)
+
 local farmt = farmtab:CreateSection("Farming")
-guiElements["toggles"]["autodispense"] = farmt:CreateToggle("Auto Dispenser [⚙]", nil, function(State) bongkoc.toggles.autodispense = State end)
-guiElements["toggles"]["autoboosters"] = farmt:CreateToggle("Auto Field Boosters [⚙]", nil, function(State) bongkoc.toggles.autoboosters = State end)
-guiElements["toggles"]["clock"] = farmt:CreateToggle("Auto Wealth Clock", nil, function(State) bongkoc.toggles.clock = State end)
-guiElements["toggles"]["collectgingerbreads"] = farmt:CreateToggle("Auto Gingerbread Bears ["..Beesmas.."]", nil, function(State) bongkoc.toggles.collectgingerbreads = State end)
-guiElements["toggles"]["autosamovar"] = farmt:CreateToggle("Auto Samovar ["..Beesmas.."]", nil, function(State) bongkoc.toggles.autosamovar = State end)
-guiElements["toggles"]["autostockings"] = farmt:CreateToggle("Auto Stockings ["..Beesmas.."]", nil, function(State) bongkoc.toggles.autostockings = State end)
-guiElements["toggles"]["autosnowmachine"] = farmt:CreateToggle("Auto Snow Machine ["..Beesmas.."]", nil, function(State) bongkoc.toggles.autosnowmachine = State end)
-guiElements["toggles"]["autocandles"] = farmt:CreateToggle("Auto Honey Candles ["..Beesmas.."]", nil, function(State) bongkoc.toggles.autocandles = State end)
-guiElements["toggles"]["autofeast"] = farmt:CreateToggle("Auto Beesmas Feast ["..Beesmas.."]", nil, function(State) bongkoc.toggles.autofeast = State end)
-guiElements["toggles"]["autohoneywreath"] = farmt:CreateToggle("Auto Honey Wreath ["..Beesmas.."]", nil, function(State) bongkoc.toggles.autohoneywreath = State end)--:AddToolTip("Will go to Honey Wreath when you have a full bag")
-guiElements["toggles"]["autoonettart"] = farmt:CreateToggle("Auto Onett's Lid Art ["..Beesmas.."]", nil, function(State) bongkoc.toggles.autoonettart = State end)
-guiElements["toggles"]["freeantpass"] = farmt:CreateToggle("Auto Free Antpasses", nil, function(State) bongkoc.toggles.freeantpass = State end)
-guiElements["toggles"]["freerobopass"] = farmt:CreateToggle("Auto Free Robopasses", nil, function(State) bongkoc.toggles.freerobopass = State end)
---guiElements["toggles"]["instantconverters"] = farmt:CreateToggle("Use Instant Converters",nil,  function(State) bongkoc.toggles.instantconverters = State end):AddToolTip("Uses Micro-Converters when a Sprout or a Puffshroom appears.")
-guiElements["toggles"]["farmsprouts"] = farmt:CreateToggle("Farm Sprouts", nil, function(State) bongkoc.toggles.farmsprouts = State end)
-guiElements["toggles"]["farmpuffshrooms"] = farmt:CreateToggle("Farm Puffshrooms", nil, function(State) bongkoc.toggles.farmpuffshrooms = State end)
-guiElements["toggles"]["farmsnowflakes"] = farmt:CreateToggle("Farm Snowflakes ["..Danger.."]["..Beesmas.."]", nil, function(State) bongkoc.toggles.farmsnowflakes = State end)
-guiElements["toggles"]["farmleaves"] = farmt:CreateToggle("Farm All Leaves ["..Danger.."]", nil, function(State) bongkoc.toggles.farmleaves = State end)
-guiElements["toggles"]["farmtickets"] = farmt:CreateToggle("Farm Tickets ["..Danger.."]", nil, function(State) bongkoc.toggles.farmtickets = State end)
-guiElements["toggles"]["farmrares"] = farmt:CreateToggle("Teleport To Rares ["..Danger.."]", nil, function(State) bongkoc.toggles.farmrares = State end)
-guiElements["toggles"]["autoquest"] = farmt:CreateToggle("Auto Accept/Confirm Quests [⚙]", nil, function(State) bongkoc.toggles.autoquest = State end)
-guiElements["toggles"]["autodoquest"] = farmt:CreateToggle("Auto Do Quests [⚙]", nil, function(State) bongkoc.toggles.autodoquest = State end)
-guiElements["toggles"]["autospawnsprout"] = farmt:CreateToggle("Auto Special Sprout Summoner", nil, function(State) bongkoc.toggles.autospawnsprout = State end)
-guiElements["toggles"]["honeystorm"] = farmt:CreateToggle("Auto Honeystorm", nil, function(State) bongkoc.toggles.honeystorm = State end)
-guiElements["toggles"]["summonfreestickbug"] = farmt:CreateToggle("Summon Free Stick Bug", nil, function(State) bongkoc.toggles.summonfreestickbug = State end)
-guiElements["toggles"]["meteorshower"] = farmt:CreateToggle("Auto Meteor Shower", nil, function(State) bongkoc.toggles.meteorshower = State end)
+guiElements["toggles"]["autodispense"] = farmt:CreateToggle("Auto Dispenser [⚙]", nil, function(State) kocmoc.toggles.autodispense = State end)
+guiElements["toggles"]["autoboosters"] = farmt:CreateToggle("Auto Field Boosters [⚙]", nil, function(State) kocmoc.toggles.autoboosters = State end)
+guiElements["toggles"]["clock"] = farmt:CreateToggle("Auto Wealth Clock", nil, function(State) kocmoc.toggles.clock = State end)
+guiElements["toggles"]["collectgingerbreads"] = farmt:CreateToggle("Auto Gingerbread Bears", nil, function(State) kocmoc.toggles.collectgingerbreads = State end)
+guiElements["toggles"]["autosamovar"] = farmt:CreateToggle("Auto Samovar", nil, function(State) kocmoc.toggles.autosamovar = State end)
+guiElements["toggles"]["autostockings"] = farmt:CreateToggle("Auto Stockings", nil, function(State) kocmoc.toggles.autostockings = State end)
+guiElements["toggles"]["autocandles"] = farmt:CreateToggle("Auto Honey Candles", nil, function(State) kocmoc.toggles.autocandles = State end)
+guiElements["toggles"]["autofeast"] = farmt:CreateToggle("Auto Beesmas Feast", nil, function(State) kocmoc.toggles.autofeast = State end)
+guiElements["toggles"]["autoonettart"] = farmt:CreateToggle("Auto Onett's Lid Art", nil, function(State) kocmoc.toggles.autoonettart = State end)
+guiElements["toggles"]["freeantpass"] = farmt:CreateToggle("Auto Free Antpasses", nil, function(State) kocmoc.toggles.freeantpass = State end)
+guiElements["toggles"]["farmsprouts"] = farmt:CreateToggle("Farm Sprouts", nil, function(State) kocmoc.toggles.farmsprouts = State end)
+guiElements["toggles"]["farmpuffshrooms"] = farmt:CreateToggle("Farm Puffshrooms", nil, function(State) kocmoc.toggles.farmpuffshrooms = State end)
+guiElements["toggles"]["farmsnowflakes"] = farmt:CreateToggle("Farm Snowflakes ["..Danger.."]", nil, function(State) kocmoc.toggles.farmsnowflakes = State end)
+guiElements["toggles"]["farmtickets"] = farmt:CreateToggle("Farm Tickets ["..Danger.."]", nil, function(State) kocmoc.toggles.farmtickets = State end)
+guiElements["toggles"]["farmrares"] = farmt:CreateToggle("Teleport To Rares ["..Danger.."]", nil, function(State) kocmoc.toggles.farmrares = State end)
+guiElements["toggles"]["autoquest"] = farmt:CreateToggle("Auto Accept/Confirm Quests [⚙]", nil, function(State) kocmoc.toggles.autoquest = State end)
+guiElements["toggles"]["autodoquest"] = farmt:CreateToggle("Auto Do Quests [⚙]", nil, function(State) kocmoc.toggles.autodoquest = State end)
+guiElements["toggles"]["honeystorm"] = farmt:CreateToggle("Auto Honeystorm", nil, function(State) kocmoc.toggles.honeystorm = State end)
 farmt:CreateLabel(" ")
 guiElements["toggles"]["resetbeenergy"] = farmt:CreateToggle("Reset Bee Energy after X Conversions", nil, function(bool)
-    bongkoc.toggles.resetbeenergy = bool
+    kocmoc.toggles.resetbeenergy = bool
 end)
 guiElements["vars"]["resettimer"] = farmt:CreateTextBox("Conversion Amount", "default = 3", true, function(Value)
-    bongkoc.vars.resettimer = tonumber(Value)
+    kocmoc.vars.resettimer = tonumber(Value)
 end)
 
 local plantersection = plantertab:CreateSection("Automatic Planters & Nectars")
-guiElements["toggles"]["autoplanters"] = plantersection:CreateToggle("Auto Planters", nil, function(State) bongkoc.toggles.autoplanters = State end)
-guiElements["toggles"]["blacklistinvigorating"] = plantersection:CreateToggle("Blacklist Invigorating", nil, function(State) bongkoc.toggles.blacklistinvigorating = State end)
-guiElements["toggles"]["blacklistcomforting"] = plantersection:CreateToggle("Blacklist Comforting", nil, function(State) bongkoc.toggles.blacklistcomforting = State end)
-guiElements["toggles"]["blacklistmotivating"] = plantersection:CreateToggle("Blacklist Motivating", nil, function(State) bongkoc.toggles.blacklistmotivating = State end)
-guiElements["toggles"]["blacklistrefreshing"] = plantersection:CreateToggle("Blacklist Refreshing", nil, function(State) bongkoc.toggles.blacklistrefreshing = State end)
-guiElements["toggles"]["blacklistsatisfying"] = plantersection:CreateToggle("Blacklist Satisfying", nil, function(State) bongkoc.toggles.blacklistsatisfying = State end)
+guiElements["toggles"]["autoplanters"] = plantersection:CreateToggle("Auto Planters", nil, function(State) kocmoc.toggles.autoplanters = State end)
+guiElements["toggles"]["blacklistinvigorating"] = plantersection:CreateToggle("Blacklist Invigorating", nil, function(State) kocmoc.toggles.blacklistinvigorating = State end)
+guiElements["toggles"]["blacklistcomforting"] = plantersection:CreateToggle("Blacklist Comforting", nil, function(State) kocmoc.toggles.blacklistcomforting = State end)
+guiElements["toggles"]["blacklistmotivating"] = plantersection:CreateToggle("Blacklist Motivating", nil, function(State) kocmoc.toggles.blacklistmotivating = State end)
+guiElements["toggles"]["blacklistrefreshing"] = plantersection:CreateToggle("Blacklist Refreshing", nil, function(State) kocmoc.toggles.blacklistrefreshing = State end)
+guiElements["toggles"]["blacklistsatisfying"] = plantersection:CreateToggle("Blacklist Satisfying", nil, function(State) kocmoc.toggles.blacklistsatisfying = State end)
 guiElements["vars"]["planterharvestamount"] = plantersection:CreateSlider("Planter Harvest Percentage", 0, 100, 75, false, function(Value)
-    bongkoc.vars.planterharvestamount = Value
+    kocmoc.vars.planterharvestamount = Value
 end)
-guiElements["toggles"]["paperplanter"] = plantersection:CreateToggle("Blacklist Paper Planter", nil, function(State) bongkoc.toggles.paperplanter = State end)
-guiElements["toggles"]["ticketplanter"] = plantersection:CreateToggle("Blacklist Ticket Planter", nil, function(State) bongkoc.toggles.ticketplanter = State end)
-guiElements["toggles"]["plasticplanter"] = plantersection:CreateToggle("Blacklist Plastic Planter", nil, function(State) bongkoc.toggles.plasticplanter = State end)
-guiElements["toggles"]["candyplanter"] = plantersection:CreateToggle("Blacklist Candy Planter", nil, function(State) bongkoc.toggles.candyplanter = State end)
-guiElements["toggles"]["redclayplanter"] = plantersection:CreateToggle("Blacklist Red Clay Planter", nil, function(State) bongkoc.toggles.redclayplanter = State end)
-guiElements["toggles"]["blueclayplanter"] = plantersection:CreateToggle("Blacklist Blue Clay Planter", nil, function(State) bongkoc.toggles.blueclayplanter = State end)
-guiElements["toggles"]["tackyplanter"] = plantersection:CreateToggle("Blacklist Tacky Planter", nil, function(State) bongkoc.toggles.tackyplanter = State end)
-guiElements["toggles"]["hydroponicplanter"] = plantersection:CreateToggle("Blacklist Hydroponic Planter", nil, function(State) bongkoc.toggles.hydroponicplanter = State end)
-guiElements["toggles"]["heattreatedplanter"] = plantersection:CreateToggle("Blacklist Heat-Treated Planter", nil, function(State) bongkoc.toggles.heattreatedplanter = State end)
-guiElements["toggles"]["pesticideplanter"] = plantersection:CreateToggle("Blacklist Pesticide Planter", nil, function(State) bongkoc.toggles.pesticideplanter = State end)
-guiElements["toggles"]["petalplanter"] = plantersection:CreateToggle("Blacklist Petal Planter", nil, function(State) bongkoc.toggles.petalplanter = State end)
-guiElements["toggles"]["festiveplanter"] = plantersection:CreateToggle("Blacklist Festive Planter", nil, function(State) bongkoc.toggles.festiveplanter = State end)
+guiElements["toggles"]["plasticplanter"] = plantersection:CreateToggle("Blacklist Plastic Planter", nil, function(State) kocmoc.toggles.plasticplanter = State end)
+guiElements["toggles"]["candyplanter"] = plantersection:CreateToggle("Blacklist Candy Planter", nil, function(State) kocmoc.toggles.candyplanter = State end)
+guiElements["toggles"]["redclayplanter"] = plantersection:CreateToggle("Blacklist Red Clay Planter", nil, function(State) kocmoc.toggles.redclayplanter = State end)
+guiElements["toggles"]["blueclayplanter"] = plantersection:CreateToggle("Blacklist Blue Clay Planter", nil, function(State) kocmoc.toggles.blueclayplanter = State end)
+guiElements["toggles"]["tackyplanter"] = plantersection:CreateToggle("Blacklist Tacky Planter", nil, function(State) kocmoc.toggles.tackyplanter = State end)
+guiElements["toggles"]["pesticideplanter"] = plantersection:CreateToggle("Blacklist Pesticide Planter", nil, function(State) kocmoc.toggles.pesticideplanter = State end)
+guiElements["toggles"]["petalplanter"] = plantersection:CreateToggle("Blacklist Petal Planter", nil, function(State) kocmoc.toggles.petalplanter = State end)
 
 local customplanterssection = plantertab:CreateSection("Custom Planters")
 customplanterssection:CreateLabel("Turning this on will disable auto planters!")
 customplanterssection:CreateLabel("["..Danger.."] You should know what you are")
 customplanterssection:CreateLabel("doing before turning this on! ["..Danger.."]")
-guiElements["toggles"]["docustomplanters"] = customplanterssection:CreateToggle("Custom Planters", nil, function(State) bongkoc.toggles.docustomplanters = State end)
+guiElements["toggles"]["docustomplanters"] = customplanterssection:CreateToggle("Custom Planters", nil, function(State) kocmoc.toggles.docustomplanters = State end)
 
 local customplanter1section = plantertab:CreateSection("Custom Planter 1")
 guiElements["vars"]["customplanterfield11"] = customplanter1section:CreateDropdown("Field 1", DropdownFieldsTable, function(Option)
-    bongkoc.vars.customplanterfield11 = Option
+    kocmoc.vars.customplanterfield11 = Option
 end)
 guiElements["vars"]["customplanter11"] = customplanter1section:CreateDropdown("Field 1 Planter Type", DropdownPlanterTable, function(Option)
-    bongkoc.vars.customplanter11 = Option
+    kocmoc.vars.customplanter11 = Option
 end)
 guiElements["vars"]["customplanterdelay11"] = customplanter1section:CreateSlider("Field 1 Harvest %", 0, 100, 75, false, function(Value)
-    bongkoc.vars.customplanterdelay11 = Value
+    kocmoc.vars.customplanterdelay11 = Value
 end)
 guiElements["vars"]["customplanterfield12"] = customplanter1section:CreateDropdown("Field 2", DropdownFieldsTable, function(Option)
-    bongkoc.vars.customplanterfield12 = Option
+    kocmoc.vars.customplanterfield12 = Option
 end)
 guiElements["vars"]["customplanter12"] = customplanter1section:CreateDropdown("Field 2 Planter Type", DropdownPlanterTable, function(Option)
-    bongkoc.vars.customplanter12 = Option
+    kocmoc.vars.customplanter12 = Option
 end)
 guiElements["vars"]["customplanterdelay12"] = customplanter1section:CreateSlider("Field 2 Harvest %", 0, 100, 75, false, function(Value)
-    bongkoc.vars.customplanterdelay12 = Value
+    kocmoc.vars.customplanterdelay12 = Value
 end)
 guiElements["vars"]["customplanterfield13"] = customplanter1section:CreateDropdown("Field 3", DropdownFieldsTable, function(Option)
-    bongkoc.vars.customplanterfield13 = Option
+    kocmoc.vars.customplanterfield13 = Option
 end)
 guiElements["vars"]["customplanter13"] = customplanter1section:CreateDropdown("Field 3 Planter Type", DropdownPlanterTable, function(Option)
-    bongkoc.vars.customplanter13 = Option
+    kocmoc.vars.customplanter13 = Option
 end)
 guiElements["vars"]["customplanterdelay13"] = customplanter1section:CreateSlider("Field 3 Harvest %", 0, 100, 75, false, function(Value)
-    bongkoc.vars.customplanterdelay13 = Value
+    kocmoc.vars.customplanterdelay13 = Value
 end)
 guiElements["vars"]["customplanterfield14"] = customplanter1section:CreateDropdown("Field 4", DropdownFieldsTable, function(Option)
-    bongkoc.vars.customplanterfield14 = Option
+    kocmoc.vars.customplanterfield14 = Option
 end)
 guiElements["vars"]["customplanter14"] = customplanter1section:CreateDropdown("Field 4 Planter Type", DropdownPlanterTable, function(Option)
-    bongkoc.vars.customplanter14 = Option
+    kocmoc.vars.customplanter14 = Option
 end)
 guiElements["vars"]["customplanterdelay14"] = customplanter1section:CreateSlider("Field 4 Harvest %", 0, 100, 75, false, function(Value)
-    bongkoc.vars.customplanterdelay14 = Value
+    kocmoc.vars.customplanterdelay14 = Value
 end)
 guiElements["vars"]["customplanterfield15"] = customplanter1section:CreateDropdown("Field 5", DropdownFieldsTable, function(Option)
-    bongkoc.vars.customplanterfield15 = Option
+    kocmoc.vars.customplanterfield15 = Option
 end)
 guiElements["vars"]["customplanter15"] = customplanter1section:CreateDropdown("Field 5 Planter Type", DropdownPlanterTable, function(Option)
-    bongkoc.vars.customplanter15 = Option
+    kocmoc.vars.customplanter15 = Option
 end)
 guiElements["vars"]["customplanterdelay15"] = customplanter1section:CreateSlider("Field 5 Harvest %", 0, 100, 75, false, function(Value)
-    bongkoc.vars.customplanterdelay15 = Value
+    kocmoc.vars.customplanterdelay15 = Value
 end)
 
 local customplanter2section = plantertab:CreateSection("Custom Planter 2")
 guiElements["vars"]["customplanterfield21"] = customplanter2section:CreateDropdown("Field 1", DropdownFieldsTable, function(Option)
-    bongkoc.vars.customplanterfield21 = Option
+    kocmoc.vars.customplanterfield21 = Option
 end)
 guiElements["vars"]["customplanter21"] = customplanter2section:CreateDropdown("Field 1 Planter Type", DropdownPlanterTable, function(Option)
-    bongkoc.vars.customplanter21 = Option
+    kocmoc.vars.customplanter21 = Option
 end)
 guiElements["vars"]["customplanterdelay21"] = customplanter2section:CreateSlider("Field 1 Harvest %", 0, 100, 75, false, function(Value)
-    bongkoc.vars.customplanterdelay21 = Value
+    kocmoc.vars.customplanterdelay21 = Value
 end)
 guiElements["vars"]["customplanterfield22"] = customplanter2section:CreateDropdown("Field 2", DropdownFieldsTable, function(Option)
-    bongkoc.vars.customplanterfield22 = Option
+    kocmoc.vars.customplanterfield22 = Option
 end)
 guiElements["vars"]["customplanter22"] = customplanter2section:CreateDropdown("Field 2 Planter Type", DropdownPlanterTable, function(Option)
-    bongkoc.vars.customplanter22 = Option
+    kocmoc.vars.customplanter22 = Option
 end)
 guiElements["vars"]["customplanterdelay22"] = customplanter2section:CreateSlider("Field 2 Harvest %", 0, 100, 75, false, function(Value)
-    bongkoc.vars.customplanterdelay22 = Value
+    kocmoc.vars.customplanterdelay22 = Value
 end)
 guiElements["vars"]["customplanterfield23"] = customplanter2section:CreateDropdown("Field 3", DropdownFieldsTable, function(Option)
-    bongkoc.vars.customplanterfield23 = Option
+    kocmoc.vars.customplanterfield23 = Option
 end)
 guiElements["vars"]["customplanter23"] = customplanter2section:CreateDropdown("Field 3 Planter Type", DropdownPlanterTable, function(Option)
-    bongkoc.vars.customplanter23 = Option
+    kocmoc.vars.customplanter23 = Option
 end)
 guiElements["vars"]["customplanterdelay23"] = customplanter2section:CreateSlider("Field 3 Harvest %", 0, 100, 75, false, function(Value)
-    bongkoc.vars.customplanterdelay23 = Value
+    kocmoc.vars.customplanterdelay23 = Value
 end)
 guiElements["vars"]["customplanterfield24"] = customplanter2section:CreateDropdown("Field 4", DropdownFieldsTable, function(Option)
-    bongkoc.vars.customplanterfield24 = Option
+    kocmoc.vars.customplanterfield24 = Option
 end)
 guiElements["vars"]["customplanter24"] = customplanter2section:CreateDropdown("Field 4 Planter Type", DropdownPlanterTable, function(Option)
-    bongkoc.vars.customplanter24 = Option
+    kocmoc.vars.customplanter24 = Option
 end)
 guiElements["vars"]["customplanterdelay24"] = customplanter2section:CreateSlider("Field 4 Harvest %", 0, 100, 75, false, function(Value)
-    bongkoc.vars.customplanterdelay24 = Value
+    kocmoc.vars.customplanterdelay24 = Value
 end)
 guiElements["vars"]["customplanterfield25"] = customplanter2section:CreateDropdown("Field 5", DropdownFieldsTable, function(Option)
-    bongkoc.vars.customplanterfield25 = Option
+    kocmoc.vars.customplanterfield25 = Option
 end)
 guiElements["vars"]["customplanter25"] = customplanter2section:CreateDropdown("Field 5 Planter Type", DropdownPlanterTable, function(Option)
-    bongkoc.vars.customplanter25 = Option
+    kocmoc.vars.customplanter25 = Option
 end)
 guiElements["vars"]["customplanterdelay25"] = customplanter2section:CreateSlider("Field 5 Harvest %", 0, 100, 75, false, function(Value)
-    bongkoc.vars.customplanterdelay25 = Value
+    kocmoc.vars.customplanterdelay25 = Value
 end)
 
 local customplanter3section = plantertab:CreateSection("Custom Planter 3")
 guiElements["vars"]["customplanterfield31"] = customplanter3section:CreateDropdown("Field 1 Field", DropdownFieldsTable, function(Option)
-    bongkoc.vars.customplanterfield31 = Option
+    kocmoc.vars.customplanterfield31 = Option
 end)
 guiElements["vars"]["customplanter31"] = customplanter3section:CreateDropdown("Field 1 Planter Type", DropdownPlanterTable, function(Option)
-    bongkoc.vars.customplanter31 = Option
+    kocmoc.vars.customplanter31 = Option
 end)
 guiElements["vars"]["customplanterdelay31"] = customplanter3section:CreateSlider("Field 1 Harvest %", 0, 100, 75, false, function(Value)
-    bongkoc.vars.customplanterdelay31 = Value
+    kocmoc.vars.customplanterdelay31 = Value
 end)
 guiElements["vars"]["customplanterfield32"] = customplanter3section:CreateDropdown("Field 2 Field", DropdownFieldsTable, function(Option)
-    bongkoc.vars.customplanterfield32 = Option
+    kocmoc.vars.customplanterfield32 = Option
 end)
 guiElements["vars"]["customplanter32"] = customplanter3section:CreateDropdown("Field 2 Planter Type", DropdownPlanterTable, function(Option)
-    bongkoc.vars.customplanter32 = Option
+    kocmoc.vars.customplanter32 = Option
 end)
 guiElements["vars"]["customplanterdelay32"] = customplanter3section:CreateSlider("Field 2 Harvest %", 0, 100, 75, false, function(Value)
-    bongkoc.vars.customplanterdelay32 = Value
+    kocmoc.vars.customplanterdelay32 = Value
 end)
 guiElements["vars"]["customplanterfield33"] = customplanter3section:CreateDropdown("Field 3 Field", DropdownFieldsTable, function(Option)
-    bongkoc.vars.customplanterfield33 = Option
+    kocmoc.vars.customplanterfield33 = Option
 end)
 guiElements["vars"]["customplanter33"] = customplanter3section:CreateDropdown("Field 3 Planter Type", DropdownPlanterTable, function(Option)
-    bongkoc.vars.customplanter33 = Option
+    kocmoc.vars.customplanter33 = Option
 end)
 guiElements["vars"]["customplanterdelay33"] = customplanter3section:CreateSlider("Field 3 Harvest %", 0, 100, 75, false, function(Value)
-    bongkoc.vars.customplanterdelay33 = Value
+    kocmoc.vars.customplanterdelay33 = Value
 end)
 guiElements["vars"]["customplanterfield34"] = customplanter3section:CreateDropdown("Field 4 Field", DropdownFieldsTable, function(Option)
-    bongkoc.vars.customplanterfield34 = Option
+    kocmoc.vars.customplanterfield34 = Option
 end)
 guiElements["vars"]["customplanter34"] = customplanter3section:CreateDropdown("Field 4 Planter Type", DropdownPlanterTable, function(Option)
-    bongkoc.vars.customplanter34 = Option
+    kocmoc.vars.customplanter34 = Option
 end)
 guiElements["vars"]["customplanterdelay34"] = customplanter3section:CreateSlider("Field 4 Harvest %", 0, 100, 75, false, function(Value)
-    bongkoc.vars.customplanterdelay34 = Value
+    kocmoc.vars.customplanterdelay34 = Value
 end)
 guiElements["vars"]["customplanterfield35"] = customplanter3section:CreateDropdown("Field 5 Field", DropdownFieldsTable, function(Option)
-    bongkoc.vars.customplanterfield35 = Option
+    kocmoc.vars.customplanterfield35 = Option
 end)
 guiElements["vars"]["customplanter35"] = customplanter3section:CreateDropdown("Field 5 Planter Type", DropdownPlanterTable, function(Option)
-    bongkoc.vars.customplanter35 = Option
+    kocmoc.vars.customplanter35 = Option
 end)
 guiElements["vars"]["customplanterdelay35"] = customplanter3section:CreateSlider("Field 5 Harvest %", 0, 100, 75, false, function(Value)
-    bongkoc.vars.customplanterdelay35 = Value
+    kocmoc.vars.customplanterdelay35 = Value
 end)
 
 local mobkill = combtab:CreateSection("Combat")
-mobkill:CreateToggle("Train Crab", nil, function(State) 
-    --bongkoc.toggles.traincrab = State 
-    if State then 
-        api.teleport(CFrame.new(-375, 110, 535)) 
-        task.wait(5) 
-        api.humanoidrootpart().CFrame = CFrame.new(-256, 110, 475) 
-    end 
-cocopad.CanCollide = State bongkoc.toggles.traincrab = State end)
-mobkill:CreateToggle("Train Commando", nil, function(State)   
-    --bongkoc.toggles.traincommando = State
+mobkill:CreateToggle("Train Crab", nil, function(State)
+    kocmoc.toggles.traincrab = State
     if State then
-        api.teleport(CFrame.new(470, 55, 167))
-        task.wait(5)
-        api.humanoidrootpart().CFrame = CFrame.new(520.758, 58.8, 161.651)
+        api.humanoidrootpart().CFrame = CFrame.new(-307.52117919922, 107.91863250732, 467.86791992188)
     end
-commandopad.CanCollide = State bongkoc.toggles.traincommando = State end)
-mobkill:CreateToggle("Train Snail",nil, function(State)
-    bongkoc.toggles.trainsnail = State
-    local fd = game.Workspace.FlowerZones["Stump Field"] 
-    if State then 
-        api.humanoidrootpart().CFrame = CFrame.new(
-            fd.Position.X, 
-            fd.Position.Y-10, 
-            fd.Position.Z
-        ) 
-    else 
-        api.humanoidrootpart().CFrame = CFrame.new(
-            fd.Position.X, 
-            fd.Position.Y+2, 
-            fd.Position.Z
-        ) 
-    end 
 end)
-    --[[bongkoc.toggles.trainsnail = State
+mobkill:CreateToggle("Train Snail", nil, function(State)
+    kocmoc.toggles.trainsnail = State
     local fd = game.Workspace.FlowerZones["Stump Field"]
     if State then
         api.humanoidrootpart().CFrame = CFrame.new(
@@ -2909,35 +2408,30 @@ end)
             fd.Position.Z
         )
     end
-end)]]
-guiElements["toggles"]["killmondo"] = mobkill:CreateToggle("Kill Mondo", nil, function(State) bongkoc.toggles.killmondo = State end)
-guiElements["toggles"]["killvicious"] = mobkill:CreateToggle("Kill Vicious", nil, function(State) bongkoc.toggles.killvicious = State end)
-guiElements["toggles"]["killwindy"] = mobkill:CreateToggle("Kill Windy", nil, function(State) bongkoc.toggles.killwindy = State end)
---guiElements["toggles"]["killstickbug"] = mobkill:CreateToggle("Kill Stick Bug", nil, function(State) bongkoc.toggles.killstickbug = State end):AddToolTip("Disable Auto Accept Quests")
-local autokillmobstoggle = mobkill:CreateToggle("Auto Kill Mobs", nil, function(State) bongkoc.toggles.autokillmobs = State end)
+end)
+guiElements["toggles"]["killmondo"] = mobkill:CreateToggle("Kill Mondo", nil, function(State) kocmoc.toggles.killmondo = State end)
+guiElements["toggles"]["killvicious"] = mobkill:CreateToggle("Kill Vicious", nil, function(State) kocmoc.toggles.killvicious = State end)
+guiElements["toggles"]["killwindy"] = mobkill:CreateToggle("Kill Windy", nil, function(State) kocmoc.toggles.killwindy = State end)
+local autokillmobstoggle = mobkill:CreateToggle("Auto Kill Mobs", nil, function(State) kocmoc.toggles.autokillmobs = State end)
 autokillmobstoggle:AddToolTip("Kills mobs after x pollen converting")
 guiElements["toggles"]["autokillmobs"] = autokillmobstoggle
-guiElements["toggles"]["avoidmobs"] = mobkill:CreateToggle("Avoid Mobs", nil, function(State) bongkoc.toggles.avoidmobs = State end)
-local autoanttoggle = mobkill:CreateToggle("Auto Ant", nil, function(State) bongkoc.toggles.autoant = State end)
-autoanttoggle:AddToolTip("You Need Spark Stuff ; Goes to Ant Challenge after pollen converting")
+guiElements["toggles"]["avoidmobs"] = mobkill:CreateToggle("Avoid Mobs", nil, function(State) kocmoc.toggles.avoidmobs = State end)
+local autoanttoggle = mobkill:CreateToggle("Auto Ant", nil, function(State) kocmoc.toggles.autoant = State end)
+autoanttoggle:AddToolTip("You Need Spark Stuff 😋; Goes to Ant Challenge after pollen converting")
 guiElements["toggles"]["autoant"] = autoanttoggle
-guiElements["toggles"]["autousestinger"] = mobkill:CreateToggle("Auto Use Stinger", nil, function(State) bongkoc.toggles.autousestinger = State end):AddToolTip("Uses 1 Stinger every 30 sec")
 
---[[local serverhopkill = combtab:CreateSection("Serverhopping Combat")
+local serverhopkill = combtab:CreateSection("Serverhopping Combat")
 serverhopkill:CreateButton("Vicious Bee Serverhopper ["..Danger.."]["..ExploitSpecific.."]", function()
     loadstring(game:HttpGet("https://raw.githubusercontent.com/BongoCaat/BSSBongo1/main/viciousbeeserverhop.lua"))()
 end):AddToolTip("Serverhops for rouge vicious bees")
-serverhopkill:CreateButton("Windy Bee Serverhopper ["..Danger.."]["..ExploitSpecific.."]", function() 
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/BongoCaat/BSSBongo1/main/windybeeserverhop.lua"))()
-end):AddToolTip("Serverhops for wild windy bees")
 serverhopkill:CreateLabel("")
 serverhopkill:CreateLabel("["..Danger.."] These functions will unload the UI")
-serverhopkill:CreateLabel("")]]
+serverhopkill:CreateLabel("")
 
 local amks = combtab:CreateSection("Auto Kill Mobs Settings")
 guiElements["vars"]["monstertimer"] = amks:CreateTextBox("Reset Mob Timer Minutes", "default = 3", true, function(Value)
     if tonumber(Value) then
-        bongkoc.vars.monstertimer = tonumber(Value)
+        kocmoc.vars.monstertimer = tonumber(Value)
     end
 end)
 amks:CreateButton("Kill Mobs", function()
@@ -2986,65 +2480,9 @@ for i, v in pairs(buffTable) do
     end)
     guiElements["vars"]["autouse"..i] = useitems:CreateToggle("Auto Use " .. i, nil, function(bool)
         buffTable[i].b = bool
-        bongkoc.vars["autouse"..i] = bool
+        kocmoc.vars["autouse"..i] = bool
     end)
 end
-
-local ghive = itemstab:CreateSection("Hive")
-
-ghive:CreateTextBox("X", "1 -10|Default = 1", true, function(Value)
-    if tonumber(Value) then
-        bongkoc.beessettings.general.x = tonumber(Value)
-    end
-end)
-ghive:CreateTextBox("Y", "1 - 5|Default = 1", true, function(Value)
-    if tonumber(Value) then
-        bongkoc.beessettings.general.y = tonumber(Value) 
-    end
-end)
-ghive:CreateTextBox("Amount", "Default = 3", true, function(Value)
-    if tonumber(Value) then
-        bongkoc.beessettings.general.amount = tonumber(Value)-- or 1 
-    end
-end)
-guiElements["vars"]["selectedTreat"] = ghive:CreateDropdown("Select Treat", treatsTable, function(option)
-    bongkoc.vars.selectedTreat = option
-end)
-
-guiElements["vars"]["usb"] = ghive:CreateDropdown("Bee", beestable, function(option)
-    bongkoc.vars.usb = option
-end)
-guiElements["toggles"]["usbtoggle"] = ghive:CreateToggle("Until Selected Bee", nil, function(State) bongkoc.toggles.usbtoggle = State
-    if not State then
-        game:GetService("Players").LocalPlayer.PlayerGui.ScreenGui.BeePopUp.TypeName.Text = ""
-    end
-end)
-guiElements["toggles"]["ugb"] = ghive:CreateToggle("Food Until Gifted", nil, function(State) bongkoc.toggles.ugb = State
-    if not State then
-        game:GetService("Players").LocalPlayer.PlayerGui.ScreenGui.BeePopUp.TypeName.Text = ""
-    end
-end)
-guiElements["toggles"]["af"] = ghive:CreateToggle("Auto Feed", nil, function(State) bongkoc.toggles.af = State end)
-
-ghive:CreateButton("Feed Selected Bee", function()
-    temptable.feed(bongkoc.beessettings.general.x, bongkoc.beessettings.general.y, bongkoc.vars.selectedTreat, bongkoc.beessettings.general.amount)
-end)
-ghive:CreateButton("Feed All Bees", function()
-    for xbee = 1, 5, 1 do
-        for ybee = 1, 10, 1 do
-            temptable.feed(xbee, ybee, bongkoc.vars.selectedTreat, bongkoc.beessettings.general.amount)
-        end
-    end
-end)
-
-guiElements["vars"]["mutation"] = ghive:CreateDropdown("Mutation", DropdownMutationTable, function(option)
-    bongkoc.vars.mutation = option
-end)
-guiElements["toggles"]["umb"] = ghive:CreateToggle("Roll Until Mutation", nil, function(State) bongkoc.toggles.umb = State
-    if not State then
-        game:GetService("Players").LocalPlayer.PlayerGui.ScreenGui.BeePopUp.MutationFrame.MutationLabel.Text = ""
-    end
-end)
 
 local miscc = misctab:CreateSection("Misc")
 miscc:CreateButton("Ant Challenge Semi-Godmode", function()
@@ -3064,17 +2502,17 @@ miscc:CreateButton("Ant Challenge Semi-Godmode", function()
     api.tween(1, CFrame.new(93.4228, 32.3983, 553.128))
 end)
 local wstoggle = miscc:CreateToggle("Walk Speed", nil, function(State)
-    bongkoc.toggles.loopspeed = State
+    kocmoc.toggles.loopspeed = State
 end)
 wstoggle:CreateKeybind("", function(Key) end)
 guiElements["toggles"]["loopspeed"] = wstoggle
 local jptoggle = miscc:CreateToggle("Jump Power", nil, function(State)
-    bongkoc.toggles.loopjump = State
+    kocmoc.toggles.loopjump = State
 end)
 jptoggle:CreateKeybind("", function(Key) end)
 guiElements["toggles"]["loopjump"] = jptoggle
 guiElements["toggles"]["godmode"] = miscc:CreateToggle("Godmode", nil, function(State)
-    bongkoc.toggles.godmode = State 
+    kocmoc.toggles.godmode = State
     bssapi:Godmode(State)
 end)
 local misco = misctab:CreateSection("Other")
@@ -3103,29 +2541,9 @@ misco:CreateButton("Export Stats Table ["..ExploitSpecific.."]", function()
     local StatCache = require(game.ReplicatedStorage.ClientStatCache)
     writefile("Stats_" .. api.nickname .. ".json", StatCache:Encode())
 end)
+
 --if string.find(string.upper(identifyexecutor()), "SYN") or string.find(string.upper(identifyexecutor()), "SCRIP") then
-    local visu = extrtab:CreateSection("Visual")
-    visu:CreateButton("Set full hive to level 25 ["..ExploitSpecific.."]", function()
-    task.spawn(function()
-        local HiveLevel = 25
-
-        local a = game:GetService("Workspace").Honeycombs:GetChildren()
-        for i,v in pairs(a) do if v.Owner.Value==game.Players.LocalPlayer then hive=v;break;end;end
-        local b = hive.Cells:GetChildren()
-
-        for i,v in pairs(b) do
-            if v:IsA("Model") and v:FindFirstChild("LevelPart") then
-                v.LevelPart.SurfaceGui.TextLabel.Text = HiveLevel
-            end
-        end
-        local a = game:GetService("Workspace").Bees:GetChildren()
-        for i,v in pairs(a) do
-            if v.OwnerId.Value == game.Players.LocalPlayer.UserId then
-                v.Wings.Decal.Texture = "rbxassetid://9122780034"
-            end
-        end
-    end)
-end)
+    local visu = misctab:CreateSection("Visual")
     local alertText = "☢️ A nuke is incoming! ☢️"
     local alertDesign = "Purple"
     local function pushAlert()
@@ -3294,8 +2712,8 @@ end)
     end)
 
     visu:CreateLabel("")
-    local destroym = false
-    visu:CreateToggle("Destroy Map", nil, function(State) destroym = State end)
+    local destroym = true
+    visu:CreateToggle("Destroy Map", true, function(State) destroym = State end)
     local nukeDuration = 10
     local nukePosition = Vector3.new(-26.202560424804688, 0.657240390777588, 172.31759643554688)
     local spoof = player.PlayerScripts.AlertBoxes
@@ -3356,37 +2774,37 @@ end)
         end
     end)
 
-local webhooksection = extrtab:CreateSection("WebhookBetter")
+local webhooksection = misctab:CreateSection("External")
 guiElements["toggles"]["shutdownkick"] = webhooksection:CreateToggle("Shutdown on Kick", nil, function(State)
-    bongkoc.toggles.shutdownkick = State
+    kocmoc.toggles.shutdownkick = State
 end)
 guiElements["toggles"]["webhookupdates"] = webhooksection:CreateToggle("Send Webhook Updates", nil, function(State)
-    bongkoc.toggles.webhookupdates = State
+    kocmoc.toggles.webhookupdates = State
 end)
 guiElements["vars"]["webhookurl"] = webhooksection:CreateTextBox("Webhook URL", "Discord webhook URL", false, function(Value)
     if Value and string.find(Value, "https://") then
-        bongkoc.vars.webhookurl = Value
+        kocmoc.vars.webhookurl = Value
     else
-        api.notify("Bongkoc " .. temptable.version, "Invalid URL!", 2)
+        api.notify("bongkoc " .. temptable.version, "Invalid URL!", 2)
     end
 end)
 guiElements["vars"]["webhooktimer"] = webhooksection:CreateSlider("Minutes Between Updates", 1, 60, 60, false, function(Value)
-    bongkoc.vars.webhooktimer = Value
+    kocmoc.vars.webhooktimer = Value
 end)
 guiElements["toggles"]["webhookping"] = webhooksection:CreateToggle("Ping on Honey Update", nil, function(State)
-    bongkoc.toggles.webhookping = State
+    kocmoc.toggles.webhookping = State
 end)
-guiElements["vars"]["discordid"] = webhooksection:CreateTextBox("Discord ID", "Your Discord ID", false, function(Value)
+guiElements["vars"]["discordid"] = webhooksection:CreateTextBox("Discord ID", "", false, function(Value)
     if tonumber(Value) then
-        bongkoc.vars.discordid = Value
+        kocmoc.vars.discordid = Value
     else
-        api.notify("Bongkoc " .. temptable.version, "Invalid ID!", 2)
+        api.notify("BongKoc " .. temptable.version, "Invalid ID!", 2)
     end
 end)
 
---local autofeed = itemstab:CreateSection("Auto Feed(Old)")
+local autofeed = itemstab:CreateSection("Auto Feed")
 
---[[local function feedAllBees(treat, amt)
+local function feedAllBees(treat, amt)
     for L = 1, 5 do
         for U = 1, 10 do
             game:GetService("ReplicatedStorage").Events.ConstructHiveCellFromEgg:InvokeServer(L, U, treat, amt)
@@ -3395,134 +2813,129 @@ end)
 end
 
 guiElements["vars"]["selectedTreat"] = autofeed:CreateDropdown("Select Treat", treatsTable, function(option)
-    bongkoc.vars.selectedTreat = option
+    kocmoc.vars.selectedTreat = option
 end)
 guiElements["vars"]["selectedTreatAmount"] = autofeed:CreateTextBox("Treat Amount", "10", false, function(Value)
-    bongkoc.vars.selectedTreatAmount = tonumber(Value)
+    kocmoc.vars.selectedTreatAmount = tonumber(Value)
 end)
 autofeed:CreateButton("Feed All Bees", function()
-    feedAllBees(bongkoc.vars.selectedTreat, bongkoc.vars.selectedTreatAmount)
-end)]]
+    feedAllBees(kocmoc.vars.selectedTreat, kocmoc.vars.selectedTreatAmount)
+end)
 
 local windShrine = itemstab:CreateSection("Wind Shrine")
 guiElements["vars"]["donoItem"] = windShrine:CreateDropdown("Select Item", donatableItemsTable, function(Option)
-    bongkoc.vars.donoItem = Option
+    kocmoc.vars.donoItem = Option
 end)
 guiElements["vars"]["donoAmount"] = windShrine:CreateTextBox("Item Quantity", "10", false, function(Value)
-    bongkoc.vars.donoAmount = tonumber(Value)
+    kocmoc.vars.donoAmount = tonumber(Value)
 end)
 windShrine:CreateButton("Donate", function()
-    donateToShrine(bongkoc.vars.donoItem, bongkoc.vars.donoAmount)
-    print(bongkoc.vars.donoAmount)
+    donateToShrine(kocmoc.vars.donoItem, kocmoc.vars.donoAmount)
+    print(kocmoc.vars.donoAmount)
 end)
 guiElements["toggles"]["autodonate"] = windShrine:CreateToggle("Auto Donate", nil, function(selection)
-    bongkoc.toggles.autodonate = selection
+    kocmoc.toggles.autodonate = selection
 end)
 
 local farmsettings = setttab:CreateSection("Autofarm Settings")
---guiElements["vars"]["farmtype"] = farmsettings:CreateDropdown("Autofarm Mode", {"Walk", "Tween"}, function(Option) bongkoc.vars.farmtype = Option end)
 guiElements["vars"]["farmspeed"] = farmsettings:CreateTextBox("Autofarming Walkspeed", "Default Value = 60", true, function(Value)
-    bongkoc.vars.farmspeed = Value
+    kocmoc.vars.farmspeed = Value
 end)
 guiElements["toggles"]["loopfarmspeed"] = farmsettings:CreateToggle("^ Loop Speed On Autofarming", nil, function(State)
-    bongkoc.toggles.loopfarmspeed = State
+    kocmoc.toggles.loopfarmspeed = State
 end)
 guiElements["toggles"]["farmflower"] = farmsettings:CreateToggle("Don't Walk In Field", nil, function(State)
-    bongkoc.toggles.farmflower = State
+    kocmoc.toggles.farmflower = State
 end)
 guiElements["toggles"]["convertballoons"] = farmsettings:CreateToggle("Convert Hive Balloon", nil, function(State)
-    bongkoc.toggles.convertballoons = State
+    kocmoc.toggles.convertballoons = State
 end)
 local balloonPercentSlider = farmsettings:CreateSlider("Balloon Blessing % To Convert At", 0, 100, 50, false, function(Value)
-    bongkoc.vars.convertballoonpercent = Value
+    kocmoc.vars.convertballoonpercent = Value
 end)
 balloonPercentSlider:AddToolTip("0% = Always convert balloon when converting bag")
 guiElements["vars"]["convertballoonpercent"] = balloonPercentSlider
 guiElements["toggles"]["donotfarmtokens"] = farmsettings:CreateToggle("Don't Farm Tokens", nil, function(State)
-    bongkoc.toggles.donotfarmtokens = State
+    kocmoc.toggles.donotfarmtokens = State
 end)
 guiElements["toggles"]["enabletokenblacklisting"] = farmsettings:CreateToggle("Enable Token Blacklisting", nil, function(State)
-    bongkoc.toggles.enabletokenblacklisting = State
+    kocmoc.toggles.enabletokenblacklisting = State
 end)
 guiElements["vars"]["walkspeed"] = farmsettings:CreateSlider("Walk Speed", 0, 120, 70, false, function(Value)
-    bongkoc.vars.walkspeed = Value
+    kocmoc.vars.walkspeed = Value
 end)
 guiElements["vars"]["jumppower"] = farmsettings:CreateSlider("Jump Power", 0, 120, 70, false, function(Value)
-    bongkoc.vars.jumppower = Value
+    kocmoc.vars.jumppower = Value
 end)
 guiElements["toggles"]["autox4"] = farmsettings:CreateToggle("Auto x4 Field Boost", nil, function(State)
-    bongkoc.toggles.autox4 = State
+    kocmoc.toggles.autox4 = State
 end)
 guiElements["toggles"]["newtokencollection"] = farmsettings:CreateToggle("New Token Collection", nil, function(State)
-    bongkoc.toggles.newtokencollection = State
+    kocmoc.toggles.newtokencollection = State
 end)
 local raresettings = setttab:CreateSection("Tokens Settings")
 raresettings:CreateTextBox("Asset ID", "rbxassetid", false, function(Value)
     rarename = Value
 end)
 raresettings:CreateButton("Add Token To Rares List", function()
-    table.insert(bongkoc.rares, rarename)
+    table.insert(kocmoc.rares, rarename)
     game:GetService("CoreGui"):FindFirstChild(_G.windowname).Main:FindFirstChild("Rares List Dropdown", true):Destroy()
-    raresettings:CreateDropdown("Rares List", bongkoc.rares, function(Option) end)
+    raresettings:CreateDropdown("Rares List", kocmoc.rares, function(Option) end)
 end)
 raresettings:CreateButton("Remove Token From Rares List", function()
-    table.remove(bongkoc.rares, api.tablefind(bongkoc.rares, rarename))
+    table.remove(kocmoc.rares, api.tablefind(kocmoc.rares, rarename))
     game:GetService("CoreGui"):FindFirstChild(_G.windowname).Main:FindFirstChild(
         "Rares List Dropdown", true):Destroy()
-    raresettings:CreateDropdown("Rares List", bongkoc.rares, function(Option) end)
+    raresettings:CreateDropdown("Rares List", kocmoc.rares, function(Option) end)
 end)
 raresettings:CreateButton("Add Token To Blacklist", function()
-    table.insert(bongkoc.bltokens, rarename)
+    table.insert(kocmoc.bltokens, rarename)
     game:GetService("CoreGui"):FindFirstChild(_G.windowname).Main:FindFirstChild(
         "Tokens Blacklist Dropdown", true):Destroy()
-    raresettings:CreateDropdown("Tokens Blacklist", bongkoc.bltokens,
+    raresettings:CreateDropdown("Tokens Blacklist", kocmoc.bltokens,
                                 function(Option) end)
 end)
 raresettings:CreateButton("Remove Token From Blacklist", function()
-    table.remove(bongkoc.bltokens, api.tablefind(bongkoc.bltokens, rarename))
+    table.remove(kocmoc.bltokens, api.tablefind(kocmoc.bltokens, rarename))
     game:GetService("CoreGui"):FindFirstChild(_G.windowname).Main:FindFirstChild(
         "Tokens Blacklist Dropdown", true):Destroy()
-    raresettings:CreateDropdown("Tokens Blacklist", bongkoc.bltokens,
+    raresettings:CreateDropdown("Tokens Blacklist", kocmoc.bltokens,
                                 function(Option) end)
 end)
-raresettings:CreateDropdown("Tokens Blacklist", bongkoc.bltokens,
+raresettings:CreateDropdown("Tokens Blacklist", kocmoc.bltokens,
                             function(Option) end)
-raresettings:CreateDropdown("Rares List", bongkoc.rares, function(Option) end)
+raresettings:CreateDropdown("Rares List", kocmoc.rares, function(Option) end)
 raresettings:CreateButton("Copy Token List Link", function()
-    api.notify("Bongkoc " .. temptable.version, "Copied link to clipboard!", 2)
+    api.notify("bongkoc " .. temptable.version, "Copied link to clipboard!", 2)
     setclipboard("https://pastebin.com/raw/wtHBD3ij")
-end)
-raresettings:CreateButton("Copy Token List Link(Updated)", function()
-    api.notify("Bongkoc " .. temptable.version, "Copied link to clipboard!", 2)
-    setclipboard("https://pastebin.com/raw/CpHMJ5Eh")
 end)
 local dispsettings = setttab:CreateSection("Auto Dispenser & Auto Boosters Settings")
 guiElements["dispensesettings"]["rj"] = dispsettings:CreateToggle("Royal Jelly Dispenser", nil, function(State)
-    bongkoc.dispensesettings.rj = not bongkoc.dispensesettings.rj
+    kocmoc.dispensesettings.rj = not kocmoc.dispensesettings.rj
 end)
 guiElements["dispensesettings"]["blub"] = dispsettings:CreateToggle("Blueberry Dispenser", nil, function(State)
-    bongkoc.dispensesettings.blub = not bongkoc.dispensesettings.blub
+    kocmoc.dispensesettings.blub = not kocmoc.dispensesettings.blub
 end)
 guiElements["dispensesettings"]["straw"] = dispsettings:CreateToggle("Strawberry Dispenser", nil, function(State)
-    bongkoc.dispensesettings.straw = not bongkoc.dispensesettings.straw
+    kocmoc.dispensesettings.straw = not kocmoc.dispensesettings.straw
 end)
 guiElements["dispensesettings"]["treat"] = dispsettings:CreateToggle("Treat Dispenser", nil, function(State)
-    bongkoc.dispensesettings.treat = not bongkoc.dispensesettings.treat
+    kocmoc.dispensesettings.treat = not kocmoc.dispensesettings.treat
 end)
 guiElements["dispensesettings"]["coconut"] = dispsettings:CreateToggle("Coconut Dispenser", nil, function(State)
-    bongkoc.dispensesettings.coconut = not bongkoc.dispensesettings.coconut
+    kocmoc.dispensesettings.coconut = not kocmoc.dispensesettings.coconut
 end)
 guiElements["dispensesettings"]["glue"] = dispsettings:CreateToggle("Glue Dispenser", nil, function(State)
-    bongkoc.dispensesettings.glue = not bongkoc.dispensesettings.glue
+    kocmoc.dispensesettings.glue = not kocmoc.dispensesettings.glue
 end)
 guiElements["dispensesettings"]["white"] = dispsettings:CreateToggle("Mountain Top Booster", nil, function(State)
-    bongkoc.dispensesettings.white = not bongkoc.dispensesettings.white
+    kocmoc.dispensesettings.white = not kocmoc.dispensesettings.white
 end)
 guiElements["dispensesettings"]["blue"] = dispsettings:CreateToggle("Blue Field Booster", nil, function(State)
-    bongkoc.dispensesettings.blue = not bongkoc.dispensesettings.blue
+    kocmoc.dispensesettings.blue = not kocmoc.dispensesettings.blue
 end)
 guiElements["dispensesettings"]["red"] = dispsettings:CreateToggle("Red Field Booster", nil, function(State)
-    bongkoc.dispensesettings.red = not bongkoc.dispensesettings.red
+    kocmoc.dispensesettings.red = not kocmoc.dispensesettings.red
 end)
 local guisettings = setttab:CreateSection("GUI Settings")
 local uitoggle = guisettings:CreateToggle("UI Toggle", nil, function(State)
@@ -3556,26 +2969,26 @@ local themes = guisettings:CreateDropdown("Image", {
     end
 end)
 themes:SetOption("Hexagon")
-local bongkocs = setttab:CreateSection("Configs")
-bongkocs:CreateTextBox("Config Name", "ex: stumpconfig", false, function(Value) temptable.configname = Value end)
-bongkocs:CreateButton("Load Config", function()
-    if not isfile("bongkoc/BSS_" .. temptable.configname .. ".json") then
+local kocmocs = setttab:CreateSection("Configs")
+kocmocs:CreateTextBox("Config Name", "ex: stumpconfig", false, function(Value) temptable.configname = Value end)
+kocmocs:CreateButton("Load Config", function()
+    if not isfile("kocmoc/BSS_" .. temptable.configname .. ".json") then
         api.notify("Bongkoc " .. temptable.version, "No such config file!", 2)
     else
-        bongkoc = game:service("HttpService"):JSONDecode(readfile("bongkoc/BSS_" .. temptable.configname .. ".json"))
+        kocmoc = game:service("HttpService"):JSONDecode(readfile("kocmoc/BSS_" .. temptable.configname .. ".json"))
         for i,v in pairs(guiElements) do
             for j,k in pairs(v) do
                 local obj = k:GetObject()
                 local lastCharacters = obj.Name:reverse():sub(0, obj.Name:reverse():find(" ")):reverse()
-                if bongkoc[i][j] then
+                if kocmoc[i][j] then
                     if lastCharacters == " Dropdown" then
-                        obj.Container.Value.Text = bongkoc[i][j]
+                        obj.Container.Value.Text = kocmoc[i][j]
                     elseif lastCharacters == " Slider" then
                         task.spawn(function()
                             local Tween = game:GetService("TweenService"):Create(
                                 obj.Slider.Bar,
                                 TweenInfo.new(1),
-                                {Size = UDim2.new((tonumber(bongkoc[i][j]) - k:GetMin()) / (k:GetMax() - k:GetMin()), 0, 1, 0)}
+                                {Size = UDim2.new((tonumber(kocmoc[i][j]) - k:GetMin()) / (k:GetMax() - k:GetMin()), 0, 1, 0)}
                             )
                             Tween:Play()
                             local startStamp = tick()
@@ -3583,181 +2996,155 @@ bongkocs:CreateButton("Load Config", function()
                             while tick() - startStamp < 1 do
                                 task.wait()
                                 local partial = tick() - startStamp
-                                local value = (startValue + ((tonumber(bongkoc[i][j]) - startValue) * partial))
+                                local value = (startValue + ((tonumber(kocmoc[i][j]) - startValue) * partial))
                                 obj.Value.PlaceholderText = math.round(value * 100) / 100
                             end
-                            obj.Value.PlaceholderText = tonumber(bongkoc[i][j])
+                            obj.Value.PlaceholderText = tonumber(kocmoc[i][j])
                         end)
                     elseif lastCharacters == " Toggle" then
-                        obj.Toggle.BackgroundColor3 = bongkoc[i][j] and Config.Color or Color3.fromRGB(50,50,50)
+                        obj.Toggle.BackgroundColor3 = kocmoc[i][j] and Config.Color or Color3.fromRGB(50,50,50)
                     elseif lastCharacters == " TextBox" then
-                        obj.Background.Input.Text = bongkoc[i][j]
+                        obj.Background.Input.Text = kocmoc[i][j]
                     end
                 end
             end
         end
     end
 end)
-bongkocs:CreateButton("Save Config", function()
-    writefile("bongkoc/BSS_" .. temptable.configname .. ".json", game:service("HttpService"):JSONEncode(bongkoc))
+kocmocs:CreateButton("Save Config", function()
+    writefile("kocmoc/BSS_" .. temptable.configname .. ".json", game:service("HttpService"):JSONEncode(kocmoc))
 end)
-bongkocs:CreateButton("Reset Config", function() bongkoc = defaultbongkoc end)
+kocmocs:CreateButton("Reset Config", function() kocmoc = defaultkocmoc end)
 local fieldsettings = setttab:CreateSection("Fields Settings")
 guiElements["bestfields"]["white"] = fieldsettings:CreateDropdown("Best White Field", temptable.whitefields, function(Option)
-    bongkoc.bestfields.white = Option
+    kocmoc.bestfields.white = Option
 end)
 guiElements["bestfields"]["red"] = fieldsettings:CreateDropdown("Best Red Field", temptable.redfields, function(Option)
-    bongkoc.bestfields.red = Option
+    kocmoc.bestfields.red = Option
 end)
 guiElements["bestfields"]["blue"] = fieldsettings:CreateDropdown("Best Blue Field", temptable.bluefields, function(Option)
-    bongkoc.bestfields.blue = Option
+    kocmoc.bestfields.blue = Option
 end)
 fieldsettings:CreateDropdown("Field", fieldstable, function(Option) temptable.blackfield = Option end)
 fieldsettings:CreateButton("Add Field To Blacklist", function()
-    table.insert(bongkoc.blacklistedfields, temptable.blackfield)
+    table.insert(kocmoc.blacklistedfields, temptable.blackfield)
     game:GetService("CoreGui"):FindFirstChild(_G.windowname).Main:FindFirstChild("Blacklisted Fields Dropdown", true):Destroy()
-    fieldsettings:CreateDropdown("Blacklisted Fields", bongkoc.blacklistedfields, function(Option) end)
+    fieldsettings:CreateDropdown("Blacklisted Fields", kocmoc.blacklistedfields, function(Option) end)
 end)
 fieldsettings:CreateButton("Remove Field From Blacklist", function()
-    table.remove(bongkoc.blacklistedfields, api.tablefind(bongkoc.blacklistedfields, temptable.blackfield))
+    table.remove(kocmoc.blacklistedfields, api.tablefind(kocmoc.blacklistedfields, temptable.blackfield))
     game:GetService("CoreGui"):FindFirstChild(_G.windowname).Main:FindFirstChild("Blacklisted Fields Dropdown", true):Destroy()
-    fieldsettings:CreateDropdown("Blacklisted Fields", bongkoc.blacklistedfields, function(Option) end)
+    fieldsettings:CreateDropdown("Blacklisted Fields", kocmoc.blacklistedfields, function(Option) end)
 end)
-fieldsettings:CreateDropdown("Blacklisted Fields", bongkoc.blacklistedfields, function(Option) end)
+fieldsettings:CreateDropdown("Blacklisted Fields", kocmoc.blacklistedfields, function(Option) end)
 local aqs = setttab:CreateSection("Auto Quest Settings")
 
-guiElements["toggles"]["allquests"] = aqs:CreateToggle("Non-Repeatable Quests", nil, function(State) bongkoc.toggles.allquests = State end)
-guiElements["toggles"]["buckobeequests"] = aqs:CreateToggle("Bucko Bee Quests", nil, function(State) bongkoc.toggles.buckobeequests = State end)
-guiElements["toggles"]["rileybeequests"] = aqs:CreateToggle("Riley Bee Quests", nil, function(State) bongkoc.toggles.rileybeequests = State end)
-guiElements["toggles"]["blackbearquests"] = aqs:CreateToggle("Black Bear Quests", nil, function(State) bongkoc.toggles.blackbearquests = State end)
-guiElements["toggles"]["brownbearquests"] = aqs:CreateToggle("Brown Bear Quests", nil, function(State) bongkoc.toggles.brownbearquests = State end)
-guiElements["toggles"]["polarbearquests"] = aqs:CreateToggle("Polar Bear Quests", nil, function(State) bongkoc.toggles.polarbearquests = State end)
+guiElements["toggles"]["allquests"] = aqs:CreateToggle("Non-Repeatable Quests", nil, function(State) kocmoc.toggles.allquests = State end)
+guiElements["toggles"]["buckobeequests"] = aqs:CreateToggle("Bucko Bee Quests", nil, function(State) kocmoc.toggles.buckobeequests = State end)
+guiElements["toggles"]["rileybeequests"] = aqs:CreateToggle("Riley Bee Quests", nil, function(State) kocmoc.toggles.rileybeequests = State end)
+guiElements["toggles"]["blackbearquests"] = aqs:CreateToggle("Black Bear Quests", nil, function(State) kocmoc.toggles.blackbearquests = State end)
+guiElements["toggles"]["brownbearquests"] = aqs:CreateToggle("Brown Bear Quests", nil, function(State) kocmoc.toggles.brownbearquests = State end)
+guiElements["toggles"]["polarbearquests"] = aqs:CreateToggle("Polar Bear Quests", nil, function(State) kocmoc.toggles.polarbearquests = State end)
 
 guiElements["vars"]["questcolorprefer"] = aqs:CreateDropdown("Only Farm Ants From NPC", {
     "Any NPC", "Bucko Bee", "Riley Bee"
 }, function(Option) 
-    bongkoc.vars.questcolorprefer = Option
+    kocmoc.vars.questcolorprefer = Option
 end)
-guiElements["toggles"]["tptonpc"] = aqs:CreateToggle("Teleport To NPC", nil, function(State) bongkoc.toggles.tptonpc = State end)
-guiElements["toggles"]["autoquesthoneybee"] = aqs:CreateToggle("Include Honey Bee Quests", nil, function(State) bongkoc.toggles.autoquesthoneybee = State end)
-guiElements["toggles"]["buyantpass"] = aqs:CreateToggle("Buy Ant Pass When Needed", nil, function(State) bongkoc.toggles.buyantpass = State end)
-guiElements["toggles"]["smartmobkill"] = aqs:CreateToggle("Modify Mob Kill To Match Quests", nil, function(State) bongkoc.toggles.smartmobkill = State end)
-guiElements["toggles"]["usegumdropsforquest"] = aqs:CreateToggle("Use Gumdrops For Goo Quests", nil, function(State) bongkoc.toggles.usegumdropsforquest = State end)
+guiElements["toggles"]["tptonpc"] = aqs:CreateToggle("Teleport To NPC", nil, function(State) kocmoc.toggles.tptonpc = State end)
+guiElements["toggles"]["autoquesthoneybee"] = aqs:CreateToggle("Include Honey Bee Quests", nil, function(State) kocmoc.toggles.autoquesthoneybee = State end)
+guiElements["toggles"]["buyantpass"] = aqs:CreateToggle("Buy Ant Pass When Needed", nil, function(State) kocmoc.toggles.buyantpass = State end)
+guiElements["toggles"]["smartmobkill"] = aqs:CreateToggle("Modify Mob Kill To Match Quests", nil, function(State) kocmoc.toggles.smartmobkill = State end)
+guiElements["toggles"]["usegumdropsforquest"] = aqs:CreateToggle("Use Gumdrops For Goo Quests", nil, function(State) kocmoc.toggles.usegumdropsforquest = State end)
 
 
 local pts = setttab:CreateSection("Autofarm Priority Tokens")
 pts:CreateTextBox("Asset ID", "rbxassetid", false, function(Value) rarename = Value end)
 pts:CreateButton("Add Token To Priority List", function()
-    table.insert(bongkoc.priority, rarename)
+    table.insert(kocmoc.priority, rarename)
     game:GetService("CoreGui"):FindFirstChild(_G.windowname).Main:FindFirstChild("Priority List Dropdown", true):Destroy()
-    pts:CreateDropdown("Priority List", bongkoc.priority, function(Option) end)
+    pts:CreateDropdown("Priority List", kocmoc.priority, function(Option) end)
 end)
 pts:CreateButton("Remove Token From Priority List", function()
-    table.remove(bongkoc.priority, api.tablefind(bongkoc.priority, rarename))
+    table.remove(kocmoc.priority, api.tablefind(kocmoc.priority, rarename))
     game:GetService("CoreGui"):FindFirstChild(_G.windowname).Main:FindFirstChild("Priority List Dropdown", true):Destroy()
-    pts:CreateDropdown("Priority List", bongkoc.priority, function(Option) end)
+    pts:CreateDropdown("Priority List", kocmoc.priority, function(Option) end)
 end)
-pts:CreateDropdown("Priority List", bongkoc.priority, function(Option) end)
+pts:CreateDropdown("Priority List", kocmoc.priority, function(Option) end)
 
-local optimize = extrtab:CreateSection("Optimization")
-optimize:CreateButton("Hide nickname(Use In Public Servers)", function() loadstring(game:HttpGet("https://raw.githubusercontent.com/BongoCaat/BSSBongo1/main/nicknamespoofer.lua"))()end, {text = ""})
-optimize:CreateButton("Boost FPS", function()loadstring(game:HttpGet("https://raw.githubusercontent.com/BongoCaat/BSSBongo1/main/fpsboost.lua"))()end, {text = ""})
-optimize:CreateButton("Destroy Decals(Not Recommended)", function()loadstring(game:HttpGet("https://raw.githubusercontent.com/BongoCaat/BSSBongo1/main/destroydecals.lua"))()end, {text = ""})
-guiElements["toggles"]["visualnight"] = optimize:CreateToggle("Loops Visual Night", nil, function(State) bongkoc.toggles.visualnight = State end)
-guiElements["toggles"]["disablerender"] = optimize:CreateToggle("Disable 3D Render On Unfocus", nil, function(State) bongkoc.toggles.disablerender = State end)
+local optimize = misctab:CreateSection("Optimization")
+optimize:CreateButton("Hide nickname(Use In Public Servers)", function() loadstring(game:HttpGet("https://raw.githubusercontent.com/BongoCaat/BSSBongo1/main/nicknamespoofer.lua"))()end, {text = ''})
+optimize:CreateButton("Boost FPS", function()loadstring(game:HttpGet("https://raw.githubusercontent.com/BongoCaat/BSSBongo1/main/fpsboost.lua"))()end, {text = ''})
+optimize:CreateButton("Destroy Decals(Not Recommended)", function()loadstring(game:HttpGet("https://raw.githubusercontent.com/BongoCaat/BSSBongo1/main/destroydecals.lua"))()end, {text = ''})
+guiElements["toggles"]["disablerender"] = optimize:CreateToggle("Disable 3D Render On Unfocus", nil, function(State) kocmoc.toggles.disablerender = State end)
 optimize:CreateToggle("Disable 3D Render", nil, function(State) game:GetService("RunService"):Set3dRenderingEnabled(not State) end)
-optimize:CreateTextBox("Ping Spoofer", "Add ms to ping", true, function(Option) settings():GetService("NetworkSettings").IncomingReplicationLag = tonumber(Option)/1000 or 0 end)
 
 -- Rendering game
 
 game:GetService("UserInputService").WindowFocused:Connect(function()
-	if bongkoc.toggles.disablerender then
+	if kocmoc.toggles.disablerender then
         game:GetService("RunService"):Set3dRenderingEnabled(true)
     end
 end)
 
 game:GetService("UserInputService").WindowFocusReleased:Connect(function()
-	if bongkoc.toggles.disablerender then
+	if kocmoc.toggles.disablerender then
         game:GetService("RunService"):Set3dRenderingEnabled(false)
     end
 end)
 
 --[[local buysection = premiumtab:CreateSection("Buy")
-buysection:CreateLabel("Support the developer of bongkoc v3!")
+buysection:CreateLabel("Support the developer of Kocmoc v3!")
 buysection:CreateButton("Copy Shirt Link", function()
     api.notify("bongkoc " .. temptable.version, "Copied link to clipboard!", 2)
-    setclipboard("https://www.roblox.com/catalog/8958348861/bongkoc-Honey-Bee-Design")
+    setclipboard("https://www.roblox.com/catalog/8958348861/Kocmoc-Honey-Bee-Design")
 end)
 buysection:CreateLabel("Without them this project")
-buysection:CreateLabel("wouldn"t be possible")
+buysection:CreateLabel("wouldn't be possible")
 
 local miscsection = premiumtab:CreateSection("Misc")
-miscsection:CreateLabel("bongkoc Premium includes:")
+miscsection:CreateLabel("Kocmoc Premium includes:")
 miscsection:CreateLabel("Glider Speed Modifier [" .. getgenv().Star .. "]")
 miscsection:CreateLabel("Glider Float Exploit [" .. getgenv().Star .. "]")
 
 local autofarmingsection = premiumtab:CreateSection("Auto Farming")
-autofarmingsection:CreateLabel("bongkoc Premium includes:")
+autofarmingsection:CreateLabel("Kocmoc Premium includes:")
 autofarmingsection:CreateLabel("Windy Bee Server Hopper [" .. getgenv().Star .. "]")
 autofarmingsection:CreateLabel("Smart Bubble Bloat [" .. getgenv().Star .. "]")
 
 local autojellysection = premiumtab:CreateSection("Auto Jelly")
-autojellysection:CreateLabel("bongkoc Premium includes:")
+autojellysection:CreateLabel("Kocmoc Premium includes:")
 autojellysection:CreateLabel("Auto Jelly [" .. getgenv().Star .. "]")
 autojellysection:CreateLabel("Incredibly intricate yet simple to use")
 autojellysection:CreateLabel("to get you the perfect hive!")
 
 local autonectarsection = premiumtab:CreateSection("Auto Nectar")
-autonectarsection:CreateLabel("bongkoc Premium includes:")
+autonectarsection:CreateLabel("Kocmoc Premium includes:")
 autonectarsection:CreateLabel("Auto Nectar [" .. getgenv().Star .. "]")
 
 local webhooksection = premiumtab:CreateSection("Webhook")
-webhooksection:CreateLabel("bongkoc Premium includes:")
+webhooksection:CreateLabel("Kocmoc Premium includes:")
 webhooksection:CreateLabel("Enable Webhook [" .. getgenv().Star .. "]")
 webhooksection:CreateLabel("The perfect way to track your exact")
 webhooksection:CreateLabel("progress even from your mobile device!")
 ]]
 loadingUI:UpdateText("Loaded UI")
 local loadingLoops = loadingInfo:CreateLabel("Loading Loops..")
-
-task.spawn(function() while task.wait() do
-	pcall(function()
-		game.Players.LocalPlayer.CameraMinZoomDistance, game.Players.LocalPlayer.CameraMaxZoomDistance = 0x0, 0x400 end)
-end end)
-
-local demontoggleouyfyt = false
-task.spawn(function()
-	while wait(1) do
-		if temptable.started.mondo or temptable.started.monsters or temptable.started.vicious or temptable.started.windy or bongkoc.toggles.traincrab or bongkoc.toggles.traincommando or bongkoc.toggles.trainsnail then
-			if demontoggleouyfyt == false then
-				demontoggleouyfyt = true
-				game:GetService("ReplicatedStorage").Events.ItemPackageEvent:InvokeServer("Equip", {Mute=false;Type="Demon Mask";Category="Accessory"})
-			end
-		else
-			if demontoggleouyfyt == true then
-				demontoggleouyfyt = false
-				game:GetService("ReplicatedStorage").Events.ItemPackageEvent:InvokeServer("Equip", {Mute=false;Type=bongkoc.vars.defmask;Category="Accessory"})
-            end
-		end
-	end
-end)
-
+-- script
 
 local honeytoggleouyfyt = false
 task.spawn(function()
-    while task.wait(0.5) do
-        if bongkoc.toggles.honeymaskconv then
-            if temptable.converting or temptable.collecting.collecthoneytoken then
+    while task.wait(1) do
+        if kocmoc.toggles.honeymaskconv then
+            if temptable.converting then
                 if not honeytoggleouyfyt then
                     honeytoggleouyfyt = true
-                    wait(1.5)
                     maskequip("Honey Mask")
                 end
             else
                 if honeytoggleouyfyt then
                     honeytoggleouyfyt = false
-                    wait(1)
-                    maskequip(bongkoc.vars.defmask)
+                    maskequip(kocmoc.vars.defmask)
                 end
             end
         end
@@ -3768,7 +3155,7 @@ task.spawn(function()
     while task.wait(5) do
         local buffs = fetchBuffTable(buffTable)
         for i, v in pairs(buffTable) do
-            buffTable[i].b = bongkoc.vars["autouse"..i]
+            buffTable[i].b = kocmoc.vars["autouse"..i]
             if v["b"] then
                 local inuse = false
                 for k, p in pairs(buffs) do
@@ -3784,59 +3171,26 @@ end)
 
 task.spawn(function()
     while task.wait() do
-        --if temptable.collecting.tickets then continue end
-        if bongkoc.toggles.autofarm then
-            if bongkoc.toggles.farmbubbles then 
+        if kocmoc.toggles.autofarm then
+            if kocmoc.toggles.farmbubbles then 
                 dobubbles()
             end
-            --[[if bongkoc.toggles.farmcoco then
-                getcoco()
-            end
-            if bongkoc.toggles.collectcrosshairs then 
+            if kocmoc.toggles.collectcrosshairs then 
                 docrosshairs()
-            end]]
-            if bongkoc.toggles.farmfuzzy then
+            end
+            if kocmoc.toggles.farmfuzzy then
                 getfuzzy()
             end
-            if bongkoc.toggles.farmglitchedtokens then
-                getglitchtoken()
-            end
-            if bongkoc.toggles.farmflame then
-                getflame()
-            end
-        end
-    end
-end)
-
-game.Workspace.Camera.DupedTokens.ChildAdded:Connect(function(v)
-    if not temptable.started.vicious and not temptable.started.windy and not temptable.started.ant and not temptable.planting and not temptable.converting and not temptable.started.monsters then
-        if v.Name == "C" and v:FindFirstChild("FrontDecal") and string.find(v.FrontDecal.Texture,"5877939956") and not temptable.started.vicious and not temptable.started.monsters and bongkoc.toggles.autofarm and not temptable.started.ant and bongkoc.toggles.farmglitchedtokens and (v.Position - api.humanoidrootpart().Position).magnitude < temptable.magnitude and not temptable.converting then
-            table.insert(temptable.glitcheds, v)
-            getglitchtoken(v)
-            gettoken()
         end
     end
 end)
 
 game.Workspace.Particles.ChildAdded:Connect(function(v)
-    if not temptable.started.vicious and not temptable.started.windy and not temptable.started.ant then
-        if v.Name == "WarningDisk" and not temptable.started.vicious and bongkoc.toggles.autofarm and not temptable.started.ant and bongkoc.toggles.farmcoco and (v.Position - api.humanoidrootpart().Position).magnitude < temptable.magnitude and not temptable.converting then
-            table.insert(temptable.coconuts, v)
-            getcoco(v)
-            gettoken()
-        elseif v.Name == "Crosshair" and v ~= nil and v.BrickColor ~= BrickColor.new("Forest green") and not temptable.started.ant and v.BrickColor ~= BrickColor.new("Flint") and (v.Position - api.humanoidrootpart().Position).magnitude < temptable.magnitude and bongkoc.toggles.autofarm and bongkoc.toggles.collectcrosshairs and not temptable.converting then
-            if #temptable.crosshairs <= 3 then
-                table.insert(temptable.crosshairs, v)
-                getcrosshairs(v)
-                gettoken()
-    --[[if (v:IsA("Part") or v:IsA("MeshPart")) and not temptable.started.ant and not temptable.started.vicious and bongkoc.toggles.autofarm and not temptable.converting and not temptable.planting then
-        if v.Name == "WarningDisk" and bongkoc.toggles.farmcoco and (v.Position - api.humanoidrootpart().Position).magnitude < temptable.magnitude then
-            table.insert(temptable.coconuts, v)
-            getcoco(v)
-            gettoken()
-            task.wait(0.05)
+    if (v:IsA("Part") or v:IsA("MeshPart")) and not temptable.started.ant and not temptable.started.vicious and kocmoc.toggles.autofarm and not temptable.converting and not temptable.planting then
+        if v.Name == "WarningDisk" and kocmoc.toggles.farmcoco then
+            task.wait(0.5)
             if v.BrickColor == BrickColor.new("Lime green") then
-                task.wait(0.5)
+                task.wait(1.25)
                 if (v.Position - api.humanoidrootpart().Position).magnitude > 100 then return end
                 if temptable.lookat then
                     api.humanoidrootpart().Velocity = Vector3.new(0, 0, 0)
@@ -3850,22 +3204,14 @@ game.Workspace.Particles.ChildAdded:Connect(function(v)
                     api.humanoidrootpart().CFrame = CFrame.new(v.CFrame.p)
                 end
             end
-        elseif v.Name == "Crosshair" and bongkoc.toggles.collectcrosshairs then
-            task.wait(0.1)
-            if v ~= nil and v.BrickColor ~= BrickColor.new("Forest green") and not temptable.started.ant and v.BrickColor ~= BrickColor.new("Flint") and (v.Position-api.humanoidrootpart().Position).magnitude < temptable.magnitude and bongkoc.toggles.autofarm and bongkoc.toggles.collectcrosshairs and not temptable.converting then
-                if #temptable.crosshairs <= 3 then
-                    table.insert(temptable.crosshairs, v)
-                    getcrosshairs(v)
-                    gettoken()
-                end
-            end
+        elseif v.Name == "Crosshair" and kocmoc.toggles.collectcrosshairs then
             local timestamp = Instance.new("NumberValue", v)
             timestamp.Name = "timestamp"
             timestamp.Value = tick()
-        elseif string.find(v.Name, "Bubble") and getBuffTime("5101328809") > 0.2 and bongkoc.toggles.farmbubbles then
-            if not bongkoc.toggles.farmpuffshrooms or (bongkoc.toggles.farmpuffshrooms and not game.Workspace.Happenings.Puffshrooms:FindFirstChildOfClass("Model")) then
+        elseif string.find(v.Name, "Bubble") and getBuffTime("5101328809") > 0.2 and kocmoc.toggles.farmbubbles then
+            if not kocmoc.toggles.farmpuffshrooms or (kocmoc.toggles.farmpuffshrooms and not game.Workspace.Happenings.Puffshrooms:FindFirstChildOfClass("Model")) then
                 if (v.Position - api.humanoidrootpart().Position).magnitude > 100 then return end
-                table.insert(temptable.bubbles, v)]]
+                table.insert(temptable.bubbles, v)
             end
         end
     end
@@ -3879,15 +3225,15 @@ task.spawn(function()
             local maxpollen = tonumber(pollenprglbl.Text:match("%d+$"))
             local pollencount = player.CoreStats.Pollen.Value
             temptable.pollenpercentage = pollencount / maxpollen * 100
-            fieldselected = game.Workspace.FlowerZones[bongkoc.vars.field]
+            fieldselected = game.Workspace.FlowerZones[kocmoc.vars.field]
 
-            if bongkoc.toggles.autouseconvertors then
-                if tonumber(temptable.pollenpercentage) >= (bongkoc.vars.convertat - (bongkoc.vars.autoconvertWaitTime)) then
+            if kocmoc.toggles.autouseconvertors then
+                if tonumber(temptable.pollenpercentage) >= (kocmoc.vars.convertat - (kocmoc.vars.autoconvertWaitTime)) then
                     if not temptable.consideringautoconverting then
                         temptable.consideringautoconverting = true
                         task.spawn(function()
-                            task.wait(bongkoc.vars.autoconvertWaitTime)
-                            if tonumber(temptable.pollenpercentage) >= (bongkoc.vars.convertat - (bongkoc.vars.autoconvertWaitTime)) then
+                            task.wait(kocmoc.vars.autoconvertWaitTime)
+                            if tonumber(temptable.pollenpercentage) >= (kocmoc.vars.convertat - (kocmoc.vars.autoconvertWaitTime)) then
                                 useConvertors()
                             end
                             temptable.consideringautoconverting = false
@@ -3896,20 +3242,9 @@ task.spawn(function()
                 end
             end
 
-            --[[if bongkoc.toggles.killstickbug and temptable.sbready then
-                local event = game.ReplicatedStorage.Events:FindFirstChild("SelectNPCOption")
-                if event then
-                    event:FireServer("StartFreeStickBugEvent")
-                end
-                temptable.sbready = false
-            end
-            if lastfieldpos ~= fieldpos then
-                task.wait(0.5)
-                gettoken()
-            end]]
-            if bongkoc.toggles.autofarm then
+            if kocmoc.toggles.autofarm then
                 temptable.usegumdropsforquest = false
-                if bongkoc.toggles.autodoquest and player.PlayerGui.ScreenGui.Menus.Children.Quests.Content:FindFirstChild("Frame") --[[and not bongkoc.toggles.farmboostedfield]] then
+                if kocmoc.toggles.autodoquest and player.PlayerGui.ScreenGui.Menus.Children.Quests.Content:FindFirstChild("Frame") then
                     for i, v in next, player.PlayerGui.ScreenGui.Menus.Children.Quests:GetDescendants() do
                         if v.Name == "Description" and v.Parent and v.Parent.Parent then
                             local text = v.Text
@@ -3917,54 +3252,49 @@ task.spawn(function()
                             local pollentypes = {
                                 "White Pollen", "Red Pollen", "Blue Pollen", "Blue Flowers", "Red Flowers", "White Flowers"
                             }
-                            if (bongkoc.toggles.buckobeequests and questName:find("Bucko Bee")) or (bongkoc.toggles.rileybeequests and questName:find("Riley Bee")) or (bongkoc.toggles.polarbearquests and questName:find("Polar Bear")) or (bongkoc.toggles.brownbearquests and questName:find("Brown Bear")) or (bongkoc.toggles.blackbearquests and questName:find("Black Bear")) or (bongkoc.toggles.allquests and not questName:find("Bear:") and not questName:find("Bee:")) then
+                            if (kocmoc.toggles.buckobeequests and questName:find("Bucko Bee")) or (kocmoc.toggles.rileybeequests and questName:find("Riley Bee")) or (kocmoc.toggles.polarbearquests and questName:find("Polar Bear")) or (kocmoc.toggles.brownbearquests and questName:find("Brown Bear")) or (kocmoc.toggles.blackbearquests and questName:find("Black Bear")) or (kocmoc.toggles.allquests and not questName:find("Bear:") and not questName:find("Bee:")) then
                                 if not string.find(v.Text, "Puffshroom") then
                                     if text:find(" Goo ") then
                                         temptable.usegumdropsforquest = true
-                                        if string.find(v.Text, "Complete!") then
-                                            temptable.usegumpdropsforquest = false
-                                        end
                                     end
-                                    if api.returnvalue(fieldstable, text) and not string.find(v.Text, "Complete!") and not api.findvalue(bongkoc.blacklistedfields, api.returnvalue(fieldstable, text)) then
+                                    if api.returnvalue(fieldstable, text) and not string.find(v.Text, "Complete!") and not api.findvalue(kocmoc.blacklistedfields, api.returnvalue(fieldstable, text)) then
                                         d = api.returnvalue(fieldstable, text)
                                         fieldselected = game.Workspace.FlowerZones[d]
                                         break
                                     elseif api.returnvalue(pollentypes, text) and not string.find(v.Text, "Complete!") then
                                         d = api.returnvalue(pollentypes, text)
                                         if d == "Blue Flowers" or d == "Blue Pollen" then
-                                            fieldselected = game.Workspace.FlowerZones[bongkoc.bestfields.blue]
+                                            fieldselected = game.Workspace.FlowerZones[kocmoc.bestfields.blue]
                                             break
                                         elseif d == "White Flowers" or d == "White Pollen" then
-                                            fieldselected = game.Workspace.FlowerZones[bongkoc.bestfields.white]
+                                            fieldselected = game.Workspace.FlowerZones[kocmoc.bestfields.white]
                                             break
                                         elseif d == "Red Flowers" or d == "Red Pollen" then
-                                            fieldselected = game.Workspace.FlowerZones[bongkoc.bestfields.red]
+                                            fieldselected = game.Workspace.FlowerZones[kocmoc.bestfields.red]
                                             break
                                         end
                                     elseif questName:find("Bee") and string.find(text, "Feed") and not string.find(text, "Complete!") and not v:FindFirstChild("done") then
                                         local amount, kind = unpack((text:sub(6, text:find("to")-2)):split(" "))
                                         if amount and kind then
                                             if kind == "Blueberries" then
-                                                --temptable.feed(bongkoc.beessettings.general.x, bongkoc.beessettings.general.y, "Blueberry", 5)
-                                                game:GetService("ReplicatedStorage").Events.ConstructHiveCellFromEgg:InvokeServer(1, 1, "Blueberry", amount, false)
+                                                game:GetService("ReplicatedStorage").Events.ConstructHiveCellFromEgg:InvokeServer(5, 3, "Blueberry", amount, false)
                                             elseif kind == "Strawberries" then
-                                                --temptable.feed(bongkoc.beessettings.general.x, bongkoc.beessettings.general.y, "Strawberry", 5)
-                                                game:GetService("ReplicatedStorage").Events.ConstructHiveCellFromEgg:InvokeServer(1, 1, "Strawberry", amount, false)
+                                                game:GetService("ReplicatedStorage").Events.ConstructHiveCellFromEgg:InvokeServer(5, 3, "Strawberry", amount, false)
                                             end                                            
                                             local done = Instance.new("BoolValue", v)
                                             done.Name = "done"
                                             break
                                         end
                                     elseif string.find(text, "Ants.") and not string.find(text, "Complete!") then
-                                        if rtsg().Eggs.AntPass == 0 and bongkoc.toggles.buyantpass then
+                                        if rtsg().Eggs.AntPass == 0 and kocmoc.toggles.buyantpass then
                                             game.ReplicatedStorage.Events.ToyEvent:FireServer("Ant Pass Dispenser")
                                             task.wait(0.5)
                                         end
                                         if not game.Workspace.Toys["Ant Challenge"].Busy.Value and rtsg().Eggs.AntPass > 0 then
-                                            if bongkoc.vars.questcolorprefer == "Any NPC" then
+                                            if kocmoc.vars.questcolorprefer == "Any NPC" then
                                                 farmant()
                                             else
-                                                if questName:find(bongkoc.vars.questcolorprefer) then
+                                                if questName:find(kocmoc.vars.questcolorprefer) then
                                                     farmant()
                                                 end
                                             end
@@ -3974,35 +3304,34 @@ task.spawn(function()
                             end
                         end
                         if i == #player.PlayerGui.ScreenGui.Menus.Children.Quests:GetDescendants() then
-                            if bongkoc.toggles.followplayer then
-                                local playerToFollow = game.Players:FindFirstChild(bongkoc.vars.playertofollow)
+                            if kocmoc.toggles.followplayer then
+                                local playerToFollow = game.Players:FindFirstChild(kocmoc.vars.playertofollow)
                                 if playerToFollow and playerToFollow.Character and playerToFollow.Character:FindFirstChild("HumanoidRootPart") then
                                     fieldselected = findField(playerToFollow.Character.HumanoidRootPart.CFrame.p)
                                     if not fieldselected or tostring(fieldselected) == "Ant Field" then
-                                        fieldselected = game.Workspace.FlowerZones[bongkoc.vars.field]
+                                        fieldselected = game.Workspace.FlowerZones[kocmoc.vars.field]
                                     end
                                 end
                             else
-                                fieldselected = game.Workspace.FlowerZones[bongkoc.vars.field]
+                                fieldselected = game.Workspace.FlowerZones[kocmoc.vars.field]
                             end
                         end
                     end
                 else
-                    if bongkoc.toggles.followplayer then
-                        local playerToFollow = game.Players:FindFirstChild(bongkoc.vars.playertofollow)
+                    if kocmoc.toggles.followplayer then
+                        local playerToFollow = game.Players:FindFirstChild(kocmoc.vars.playertofollow)
                         if playerToFollow and playerToFollow.Character and playerToFollow.Character:FindFirstChild("HumanoidRootPart") then
                             fieldselected = findField(playerToFollow.Character.HumanoidRootPart.CFrame.p)
                             if not fieldselected then
-                                fieldselected = game.Workspace.FlowerZones[bongkoc.vars.field]
+                                fieldselected = game.Workspace.FlowerZones[kocmoc.vars.field]
                             end
                         end
                     else
-                        fieldselected = game.Workspace.FlowerZones[bongkoc.vars.field]
+                        fieldselected = game.Workspace.FlowerZones[kocmoc.vars.field]
                     end
                 end
-
-                --[[local colorGroup = fieldselected:FindFirstChild("ColorGroup")
-                if bongkoc.toggles.autoequipmask then 
+                local colorGroup = fieldselected:FindFirstChild("ColorGroup")
+                if kocmoc.toggles.autoequipmask then 
                     if colorGroup then
                         if colorGroup.Value == "Red" then
                             maskequip("Demon Mask")
@@ -4012,7 +3341,7 @@ task.spawn(function()
                             maskequip("Gummy Mask")
                         end
                     end
-                end]]
+                end
 
                 local onlyonesprinkler = false
 
@@ -4022,16 +3351,12 @@ task.spawn(function()
                     fieldselected.Position.Z
                 )
                 fieldposition = fieldselected.Position
-                if temptable.sprouts.detected and temptable.sprouts.coords and bongkoc.toggles.farmsprouts and not temptable.planting and not temptable.started.windy and not temptable.started.vicious and not temptable.detected.windy and not temptable.detected.vicious then
+                if temptable.sprouts.detected and temptable.sprouts.coords and kocmoc.toggles.farmsprouts then
                     onlyonesprinkler = true
                     fieldposition = temptable.sprouts.coords.Position
                     fieldpos = temptable.sprouts.coords
                 end
-                --[[if bongkoc.toggles.instantconverters and temptable.sprouts.detected or temptable.sprouts.coords or game.Workspace.Happenings.Puffshrooms:FindFirstChildOfClass("Model") then
-                    playeractivescommand:FireServer({["Name"] = "Micro-Converter"})
-		            pollenpercentage = 100
-                end]]
-                if bongkoc.toggles.farmpuffshrooms and game.Workspace.Happenings.Puffshrooms:FindFirstChildOfClass("Model") and not temptable.planting and not temptable.started.windy and not temptable.started.vicious and not temptable.detected.windy and not temptable.detected.vicious then
+                if kocmoc.toggles.farmpuffshrooms and game.Workspace.Happenings.Puffshrooms:FindFirstChildOfClass("Model") then
                     local mythics = {}
                     local legendaries = {}
                     local epics = {}
@@ -4120,10 +3445,10 @@ task.spawn(function()
                     temptable.magnitude = 35
                     onlyonesprinkler = true
 
-                    --[[fieldselected = findField(fieldposition)
+                    fieldselected = findField(fieldposition)
                     if fieldselected then
                         local colorGroup = fieldselected:FindFirstChild("ColorGroup")
-                        if bongkoc.toggles.autoequipmask then 
+                        if kocmoc.toggles.autoequipmask then 
                             if colorGroup then
                                 if colorGroup.Value == "Red" then
                                     maskequip("Demon Mask")
@@ -4134,35 +3459,35 @@ task.spawn(function()
                                 end
                             end
                         end
-                    end]]
+                    end
                 end
                 
-                if bongkoc.toggles.convertballoons and not temptable.planting and not temptable.started.vicious and not temptable.started.windy and not temptable.detected.windy and not temptable.detected.vicious and bongkoc.vars.convertballoonpercent and gethiveballoon() and getBuffTime("8083443467") < tonumber(bongkoc.vars.convertballoonpercent) / 100 then
+                if kocmoc.toggles.convertballoons and not temptable.planting and not temptable.started.vicious and kocmoc.vars.convertballoonpercent and gethiveballoon() and getBuffTime("8083443467") < tonumber(kocmoc.vars.convertballoonpercent) / 100 then
                     temptable.tokensfarm = false
-                    api.tween(2, player.SpawnPos.Value * CFrame.fromEulerAnglesXYZ(0, 110, 0) + Vector3.new(0, 0, 3))
+                    api.tween(2, player.SpawnPos.Value * CFrame.fromEulerAnglesXYZ(0, 110, 0) + Vector3.new(0, 0, 9))
                     task.wait(2)
                     api.humanoidrootpart().Velocity = Vector3.new(0, 0, 0)
-                    api.tween(0.1, player.SpawnPos.Value * CFrame.fromEulerAnglesXYZ(0, 110, 0) + Vector3.new(0, 0, 3))
+                    api.tween(0.1, player.SpawnPos.Value * CFrame.fromEulerAnglesXYZ(0, 110, 0) + Vector3.new(0, 0, 9))
                     temptable.converting = true
                     repeat converthoney() until player.CoreStats.Pollen.Value == 0
-                    if bongkoc.toggles.convertballoons and gethiveballoon() then
-                        task.wait(10)
+                    if kocmoc.toggles.convertballoons and gethiveballoon() then
+                        task.wait(6)
                         repeat
                             task.wait()
                             converthoney()
-                        until gethiveballoon() == false or not bongkoc.toggles.convertballoons
+                        until gethiveballoon() == false or not kocmoc.toggles.convertballoons
                     end
                     temptable.converting = false
                     temptable.act = temptable.act + 1
                     task.wait(6)
-                    if bongkoc.toggles.autoant and not game.Workspace.Toys["Ant Challenge"].Busy.Value and rtsg().Eggs.AntPass > 0 then
+                    if kocmoc.toggles.autoant and not game.Workspace.Toys["Ant Challenge"].Busy.Value and rtsg().Eggs.AntPass > 0 then
                         farmant()
                     end
-                    if bongkoc.toggles.autoquest then
+                    if kocmoc.toggles.autoquest then
                         makequests()
                     end
-                    if bongkoc.toggles.autokillmobs and not temptable.started.vicious and not temptable.started.windy and not temptable.detected.windy and not temptable.detected.vicious and not temptable.planting then
-                        if tick() - temptable.lastmobkill >= bongkoc.vars.monstertimer * 60 then
+                    if kocmoc.toggles.autokillmobs then
+                        if tick() - temptable.lastmobkill >= kocmoc.vars.monstertimer * 60 then
                             temptable.lastmobkill = tick()
                             temptable.started.monsters = true
                             temptable.act = 0
@@ -4170,8 +3495,8 @@ task.spawn(function()
                             temptable.started.monsters = false
                         end
                     end
-                    if bongkoc.vars.resetbeenergy then
-                        if temptable.act2 >= bongkoc.vars.resettimer then
+                    if kocmoc.vars.resetbeenergy then
+                        if temptable.act2 >= kocmoc.vars.resettimer then
                             temptable.started.monsters = true
                             temptable.act2 = 0
                             repeat 
@@ -4191,21 +3516,21 @@ task.spawn(function()
                         end
                     end
                 end
-                if tonumber(temptable.pollenpercentage) < tonumber(bongkoc.vars.convertat) or bongkoc.toggles.disableconversion and not temptable.planting then
+                if tonumber(temptable.pollenpercentage) < tonumber(kocmoc.vars.convertat) or kocmoc.toggles.disableconversion and not temptable.planting then
                     if not temptable.tokensfarm then
                         api.tween(2, fieldpos)
                         task.wait(2)
                         temptable.tokensfarm = true
-                        if bongkoc.toggles.autosprinkler then
+                        if kocmoc.toggles.autosprinkler then
                             makesprinklers(fieldposition, onlyonesprinkler)
                             task.wait(0.5)
                             playeractivescommand:FireServer({["Name"] = "Sprinkler Builder"})
                         end
                     else
-                        if not game.Workspace.MonsterSpawners.CoconutCrab.Attachment.TimerGui.TimerLabel.Visible and not temptable.started.vicious and not temptable.started.monsters and not temptable.started.windy and not temptable.detected.windy and not temptable.detected.vicious and findField(fieldposition).Name == "Coconut Field" then
+                        if not game.Workspace.MonsterSpawners.CoconutCrab.Attachment.TimerGui.TimerLabel.Visible and not temptable.started.vicious and not temptable.started.monsters and not temptable.started.windy and findField(fieldposition).Name == "Coconut Field" then
                             maskequip("Demon Mask")
                             temptable.started.crab = true
-                            while not game.Workspace.MonsterSpawners.CoconutCrab.Attachment.TimerGui.TimerLabel.Visible and not temptable.started.vicious and not temptable.started.monsters and not temptable.started.windy and not temptable.detected.windy and not temptable.detected.vicious and findField(fieldposition).Name == "Coconut Field" do
+                            while not game.Workspace.MonsterSpawners.CoconutCrab.Attachment.TimerGui.TimerLabel.Visible and not temptable.started.vicious and not temptable.started.monsters and not temptable.started.windy and findField(fieldposition).Name == "Coconut Field" do
                                 task.wait()
                                 if api.humanoidrootpart() then
                                     api.humanoidrootpart().CFrame = CFrame.new(-307.52117919922, 110.11863250732, 467.86791992188)
@@ -4213,119 +3538,108 @@ task.spawn(function()
                             end
                         end
                         temptable.started.crab = false
-                        if bongkoc.toggles.killmondo then
-                            while bongkoc.toggles.killmondo and game.Workspace.Monsters:FindFirstChild("Mondo Chick (Lvl 8)") and not temptable.started.vicious and not temptable.started.windy and not temptable.planting and not temptable.started.monsters do
+                        if kocmoc.toggles.killmondo then
+                            while kocmoc.toggles.killmondo and game.Workspace.Monsters:FindFirstChild("Mondo Chick (Lvl 8)") and not temptable.started.vicious and not temptable.started.monsters do
                                 temptable.started.mondo = true
-                                while game.Workspace.Monsters:FindFirstChild("Mondo Chick (Lvl 8)") and bongkoc.toggles.killmondo do
+                                while game.Workspace.Monsters:FindFirstChild("Mondo Chick (Lvl 8)") do
                                     disableall()
                                     game.Workspace.Map.Ground.HighBlock.CanCollide = false
                                     mondopition = game.Workspace.Monsters["Mondo Chick (Lvl 8)"].Head.Position
-                                    api.tween(0.015, CFrame.new(
+                                    api.tween(1, CFrame.new(
                                         mondopition.x,
-                                        mondopition.y - 59.90,
+                                        mondopition.y - 58,
                                         mondopition.z)
                                     )
-                                    task.wait(0.85)
+                                    task.wait(1)
                                     temptable.float = true
                                 end
-                                task.wait(0.25)
+                                task.wait(.5)
                                 game.Workspace.Map.Ground.HighBlock.CanCollide = true
                                 temptable.float = false
-                                api.tween(0.355, CFrame.new(73.2, 176.35, -167))
-                                task.wait(0.8)
+                                api.tween(.5, CFrame.new(73.2, 176.35, -167))
+                                task.wait(1)
                                 for i = 0, 50 do
                                     gettoken(CFrame.new(73.2, 176.35, -167).Position)
                                 end
                                 enableall()
-                                api.tween(1.65, fieldpos)
+                                api.tween(2, fieldpos)
                                 temptable.started.mondo = false
                             end
                         end
                         if lastfieldpos ~= fieldpos then
-                            task.wait(0.4)
+                            task.wait(0.5)
                             gettoken()
                         end
-                        --if bongkoc.toggles.farmboostedfield then farmboostedfield() end
                         if (fieldposition - api.humanoidrootpart().Position).magnitude > temptable.magnitude and findField(api.humanoidrootpart().CFrame.p) ~= findField(fieldposition) and not temptable.planting and not temptable.doingcrosshairs and not temptable.doingbubbles then
                             api.tween(0.1, fieldpos)
                             task.spawn(function()
-                                task.wait(0.45)
-                                if bongkoc.toggles.autosprinkler then
+                                task.wait(0.5)
+                                if kocmoc.toggles.autosprinkler then
                                     makesprinklers(fieldposition, onlyonesprinkler)
                                 end
                             end)
                         end
                         getprioritytokens()
-                        if bongkoc.toggles.farmflame then 
+                        if kocmoc.toggles.farmflame then 
                             getflame()
                         end
-                        if bongkoc.toggles.avoidmobs then
+                        if kocmoc.toggles.avoidmobs then
                             avoidmob()
                         end
-                        if bongkoc.toggles.farmclosestleaf then
+                        if kocmoc.toggles.farmclosestleaf then
                             closestleaf()
                         end
-                        if bongkoc.toggles.farmfireflies then
-                            getfireflies()
-                        end
-                        if bongkoc.toggles.farmsparkles then
-                            getsparkles()
-                        end
-                        if bongkoc.toggles.farmclouds then
+                        if kocmoc.toggles.farmclouds then
                             getcloud()
                         end
-                        if bongkoc.toggles.farmunderballoons then
+                        if kocmoc.toggles.farmunderballoons then
                             getballoons()
                         end
-                        if not bongkoc.toggles.donotfarmtokens then
-                            gettoken(nil, bongkoc.toggles.newtokencollection)
+                        if not kocmoc.toggles.donotfarmtokens then
+                            gettoken(nil, kocmoc.toggles.newtokencollection)
                         end
-                        if not bongkoc.toggles.farmflower then
+                        if not kocmoc.toggles.farmflower then
                             getflower()
                         end
-                        if bongkoc.toggles.farmpuffshrooms and game.Workspace.Happenings.Puffshrooms:FindFirstChildOfClass("Model") and not temptable.planting then
+                        if kocmoc.toggles.farmpuffshrooms and game.Workspace.Happenings.Puffshrooms:FindFirstChildOfClass("Model") then
                             getpuff()
                         end
-                        if bongkoc.toggles.autox4 then
+                        if kocmoc.toggles.autox4 then
                             doautox4()
                         end
-                        if temptable.usegumdropsforquest and bongkoc.toggles.usegumdropsforquest and tick() - temptable.lastgumdropuse > 3 then
+                        if temptable.usegumdropsforquest and kocmoc.toggles.usegumdropsforquest and tick() - temptable.lastgumdropuse > 3 then
                             temptable.lastgumdropuse = tick()
                             playeractivescommand:FireServer({["Name"] = "Gumdrops"})
                         end
                     end
-
-                elseif tonumber(temptable.pollenpercentage) >= tonumber(bongkoc.vars.convertat) and not bongkoc.toggles.convertion --[[and not bongkoc.toggles.disableconversion]] and not temptable.started.vicious and not temptable.started.windy and not temptable.planting and not temptable.detected.windy and not temptable.detected.vicious then
-                    if not bongkoc.toggles.disableconversion then
+                elseif tonumber(temptable.pollenpercentage) >= tonumber(kocmoc.vars.convertat) and not temptable.started.vicious and not temptable.planting then
+                    if not kocmoc.toggles.disableconversion then
                         temptable.tokensfarm = false
-                        api.tween(2, player.SpawnPos.Value * CFrame.fromEulerAnglesXYZ(0, 110, 0) + Vector3.new(0, 0, 3))
+                        api.tween(2, player.SpawnPos.Value * CFrame.fromEulerAnglesXYZ(0, 110, 0) + Vector3.new(0, 0, 9))
                         task.wait(2)
                         api.humanoidrootpart().Velocity = Vector3.new(0, 0, 0)
-                        api.tween(0.1, player.SpawnPos.Value * CFrame.fromEulerAnglesXYZ(0, 110, 0) + Vector3.new(0, 0, 3))
+                        api.tween(0.1, player.SpawnPos.Value * CFrame.fromEulerAnglesXYZ(0, 110, 0) + Vector3.new(0, 0, 9))
                         temptable.converting = true
                         repeat converthoney() until player.CoreStats.Pollen.Value == 0
-                        if bongkoc.toggles.convertballoons and bongkoc.vars.convertballoonpercent == 0 and gethiveballoon() then
-                            task.wait(10)
+                        if kocmoc.toggles.convertballoons and kocmoc.vars.convertballoonpercent == 0 and gethiveballoon() then
+                            task.wait(6)
                             repeat
                                 task.wait()
                                 converthoney()
-                            until gethiveballoon() == false or not bongkoc.toggles.convertballoons
+                            until gethiveballoon() == false or not kocmoc.toggles.convertballoons
                         end
-                        equiptool(bongkoc.vars.deftool)
+                        equiptool(kocmoc.vars.deftool)
                         temptable.converting = false
                         temptable.act = temptable.act + 1
                         task.wait(6)
-                        if bongkoc.toggles.autoant and not game.Workspace.Toys["Ant Challenge"].Busy.Value and rtsg().Eggs.AntPass > 0 then
+                        if kocmoc.toggles.autoant and not game.Workspace.Toys["Ant Challenge"].Busy.Value and rtsg().Eggs.AntPass > 0 then
                             farmant()
                         end
-                        if bongkoc.toggles.autoquest then
+                        if kocmoc.toggles.autoquest then
                             makequests()
                         end
-                        if bongkoc.toggles.autohoneywreath then
-                            wait(2)
-                        end
-                        if bongkoc.toggles.autokillmobs and not temptable.started.vicious and not temptable.started.windy and not temptable.detected.windy and not temptable.detected.vicious then
-                            if tick() - temptable.lastmobkill >= bongkoc.vars.monstertimer * 60 then
+                        if kocmoc.toggles.autokillmobs then
+                            if tick() - temptable.lastmobkill >= kocmoc.vars.monstertimer * 60 then
                                 temptable.lastmobkill = tick()
                                 temptable.started.monsters = true
                                 temptable.act = 0
@@ -4333,8 +3647,8 @@ task.spawn(function()
                                 temptable.started.monsters = false
                             end
                         end
-                        if bongkoc.vars.resetbeenergy then
-                            if temptable.act2 >= bongkoc.vars.resettimer then
+                        if kocmoc.vars.resetbeenergy then
+                            if temptable.act2 >= kocmoc.vars.resettimer then
                                 temptable.started.monsters = true
                                 temptable.act2 = 0
                                 repeat 
@@ -4361,222 +3675,9 @@ task.spawn(function()
     end
 end)
 
---stickbug
---[[function checksbcooldown()
-	local cooldown = time() - tonumber(stickbug_time)
-	if not sbfirstcheck or cooldown > 1800 and not temptable.started.vicious and not temptable.started.windy then
-		sbfirstcheck = true
-		for i,v in next, game:GetService("Workspace").NPCs:GetChildren() do
-			if v.Name == "Stick Bug" then
-				if v:FindFirstChild("Platform") then
-					if v.Platform:FindFirstChild("AlertPos") then
-						if v.Platform.AlertPos:FindFirstChild("AlertGui") then
-							if v.Platform.AlertPos.AlertGui:FindFirstChild("ImageLabel") then
-								image = v.Platform.AlertPos.AlertGui.ImageLabel
-								button = game:GetService("Players").LocalPlayer.PlayerGui.ScreenGui.ActivateButton.MouseButton1Click
-								game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(v.Platform.Position.X, v.Platform.Position.Y+3, v.Platform.Position.Z)
-								task.wait(1)					
-								for b,z in next, getconnections(button) do
-									z.Function()
-								end
-								task.wait(1)
-								break
-							end
-						end
-					end
-				end
-			end
-		end
-		task.wait(1)
-		local ScreenGui = game:GetService("Players").LocalPlayer.PlayerGui:WaitForChild("ScreenGui")	
-		firesignal(ScreenGui.NPC.OptionFrame.Option3.MouseButton1Click)
-		task.wait(1)
-		firesignal(ScreenGui.NPC.ButtonOverlay.MouseButton1Click)
-		task.wait(1)
-		local sbReady = game:GetService("Players").LocalPlayer.PlayerGui.ScreenGui.NPC.OptionFrame:FindFirstChild("Option1").Text	
-		local sbtime = string.match(sbReady, "[%d:]+")
-		if sbtime ~= nil then
-			temptable.sbready = false
-			mobsb:UpdateText("Stick Bug: "..tostring(sbtime))
-		else
-			temptable.sbready = true
-			mobsb:UpdateText("Stick Bug: Ready")
-		end
-		stickbug_time = time()
-	end
-end
-
-
-function DefenseTotemHP()
-	local dtHP = 0
-	for i,v in pairs(game:GetService("Workspace").Particles.StickBugTotem:GetChildren()) do
-		--print(v.Name)
-		if v:FindFirstChild("GuiPos") then
-			if v:FindFirstChild("GuiPos"):FindFirstChild("Gui") then
-				if v:FindFirstChild("GuiPos"):FindFirstChild("Gui"):FindFirstChild("Frame") then
-					if v:FindFirstChild("GuiPos"):FindFirstChild("Gui"):FindFirstChild("Frame"):FindFirstChild("TextLabel") then
-						local GuiText = v:FindFirstChild("GuiPos"):FindFirstChild("Gui"):FindFirstChild("Frame"):FindFirstChild("TextLabel")
-						dtHP = tonumber(GuiText.Text)
-						return dtHP
-					end
-				end
-			end
-		end
-	end
-end
-
- -- Auto Stick Bug
 task.spawn(function()
     while task.wait(1) do
-		if bongkoc.toggles.killstickbug and not temptable.started.windy and not temptable.started.vicious then
-			local sbTime = 99
-			local sbTimer = game:GetService("Players").LocalPlayer.PlayerGui.ScreenGui.ChallengeInfo.SBChallengeInfo:FindFirstChild("TimeValue").Text
-			if string.find(sbTimer, "s") then
-				sbTime = string.gsub(sbTimer,"s","")
-			end
-			if tonumber(sbTime) < 15 then
-				print("Stick Bug Challenge has finished " .. sbTimer)
-				game:GetService("Players").LocalPlayer.PlayerGui.ScreenGui.ChallengeInfo.SBChallengeInfo:FindFirstChild("TimeValue").Text = "10:00"
-				if temptable.started.stickbug then
-					enableall()
-					temptable.started.stickbug = false
-					--print("Inside of sbTimer = 10:00")
-					if bongkoc.toggles.godmode then
-						print("disabling godmode")
-						bongkoc.toggles.godmode = false
-						--godmode:SetState(false)
-						bssapi:godmode(false)
-                        			temptable.float = false
-					end
-				end
-
-			elseif sbTimer ~= "10:00" then
-				if not temptable.started.stickbug then
-					temptable.started.stickbug = true
-					disableall()
-					if not bongkoc.toggles.godmode then
-						print("enabling godmode")
-						bongkoc.toggles.godmode = true
-						bssapi:godmode(true)
-						--godmode:SetState(true)
-					end
-				end
-
-				for i,v in pairs(workspace.Monsters:GetChildren()) do
-					if string.find(v.Name,"Stick Bug") then
-						print("Now attacking " .. v.Name)
-						if game.Workspace.Particles:FindFirstChild("PollenHealthBar") then
-							local sbpollenpos = game.Workspace.Particles:FindFirstChild("PollenHealthBar").Position
-							game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(sbpollenpos.x,sbpollenpos.y,sbpollenpos.z)
-							task.wait(1)
-							temptable.magnitude = 23
-							while game.Workspace.Particles:FindFirstChild("PollenHealthBar") do
-								sbpollenpos = game.Workspace.Particles:FindFirstChild("PollenHealthBar").Position
-								if (sbpollenpos-game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude > temptable.magnitude then
-									api.tween(.2, CFrame.new(sbpollenpos.x, sbpollenpos.y, sbpollenpos.z))
-								end
-								gettoken(sbpollenpos)
-
-								--game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(sbpollenpos.x,sbpollenpos.y,sbpollenpos.z)
-								task.wait()					
-							end
-							for i = 1, 2 do gettoken(api.humanoidrootpart().Position) end
-						end
-
-						if game.Workspace.Monsters:FindFirstChild(v.Name) then
-							local sbexists = game.Workspace.Monsters[v.Name]
-							local sbposition = game.Workspace.Monsters[v.Name].Head.Position
-							api.tween(.2, CFrame.new(sbposition.x, sbposition.y - 2, sbposition.z))
-							task.wait(1)
-							if bongkoc.toggles.autosprinkler then
-								makesprinklers(position, onlyonesprinkler)
-							end
-
-							local sblvl = v.Name:gsub("%D+", "")
-							if tonumber(sblvl) > 6 then 
-								local buffs = fetchBuffTable(buffTable)
-								if not tablefind(buffs, "Oil") then
-									if GetItemListWithValue()["Oil"] > 0 then
-										game:GetService("ReplicatedStorage").Events.PlayerActivesCommand:FireServer({["Name"] = "Oil"})
-									end					
-								end
-								if not tablefind(buffs, "Jelly Beans") then
-									if GetItemListWithValue()["JellyBeans"] > 0 then
-										game:GetService("ReplicatedStorage").Events.PlayerActivesCommand:FireServer({["Name"] = "Jelly Beans"})
-									end					
-								end
-							 end						
-						end
-
-						while game.Workspace.Monsters:FindFirstChild(v.Name) and not game.Workspace.Particles:FindFirstChild("StickBugTotem") do
-							sbposition = game.Workspace.Monsters[v.Name].Head.Position
-							if tonumber(sbposition.y) > 1000 then
-								break
-							end
-							if (sbposition-game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude > temptable.magnitude then
-								api.tween(.2, CFrame.new(sbposition.x, sbposition.y - 2, sbposition.z))
-							end
-							gettoken(sbposition)
-							local buffs = fetchBuffTable(buffTable)
-							if not tablefind(buffs, "Jelly Beans") then
-								if GetItemListWithValue()["JellyBeans"] > 0 then
-									game:GetService("ReplicatedStorage").Events.PlayerActivesCommand:FireServer({["Name"] = "Jelly Beans"})
-								end					
-							end
-							if not tablefind(buffs, "Stinger") then
-								if GetItemListWithValue()["Stinger"] > 0 then
-									game:GetService("ReplicatedStorage").Events.PlayerActivesCommand:FireServer({["Name"] = "Stinger"})
-								end					
-							end
-							task.wait()
-						end
-						temptable.float = false
-
-						if game.Workspace.Particles:FindFirstChild("StickBugTotem") then
-							for j,k in pairs(game:GetService("Workspace").Particles.StickBugTotem:GetChildren()) do
-								if k:FindFirstChild("NamePos") then
-									game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(k.Position.x,k.Position.y,k.Position.z)
-									break
-								end				
-							end
-							task.wait(1)
-							if bongkoc.toggles.autosprinkler then
-								makesprinklers(position, onlyonesprinkler)
-							end
-							while game.Workspace.Particles:FindFirstChild("StickBugTotem") do
-								gettoken(api.humanoidrootpart().Position)
-								task.wait()
-							end				
-							for i = 1, 2 do gettoken(api.humanoidrootpart().Position) end
-						else
-							task.wait(1)
-							[if bongkoc.toggles.autosprinkler then
-								makesprinklers(fieldposition, onlyonesprinkler)
-							end
-							for i =1, 3 do gettoken(api.humanoidrootpart().Position) end			
-						end
-						break
-					end
-				end
-			end
-		end
-	end
-end)
---stickbug
-]]
-
-task.spawn(function()
-    while task.wait(1) do
-        if GetItemListWithValue()["Stinger"] > 0 and bongkoc.toggles.autousestinger then
-            game:GetService("ReplicatedStorage").Events.PlayerActivesCommand:FireServer({["Name"] = "Stinger"})
-            task.wait(30)
-        end
-    end
-end)
-
-task.spawn(function()
-    while task.wait(1) do
-        if bongkoc.toggles.killvicious and temptable.detected.vicious and not bongkoc.toggles.traincrab and not temptable.converting and not temptable.planting and not bongkoc.toggles.trainsnail and not temptable.started.commando and not temptable.started.mondo and not temptable.started.monsters and not game.Workspace.Toys["Ant Challenge"].Busy.Value then
+        if kocmoc.toggles.killvicious and temptable.detected.vicious and not temptable.converting and not temptable.started.monsters and not game.Workspace.Toys["Ant Challenge"].Busy.Value then
             temptable.started.vicious = true
             disableall()
             local vichumanoid = api.humanoidrootpart()
@@ -4592,7 +3693,7 @@ task.spawn(function()
             end
             for i, v in next, game.workspace.Particles:GetChildren() do
                 for x in string.gmatch(v.Name, "Vicious") do
-                    while bongkoc.toggles.killvicious and
+                    while kocmoc.toggles.killvicious and
                         temptable.detected.vicious do
                         task.wait()
                         if string.find(v.Name, "Vicious") then
@@ -4609,7 +3710,7 @@ task.spawn(function()
             end
             enableall()
             task.wait(1)
-			temptable.float = false
+            temptable.float = false
             temptable.started.vicious = false
         end
     end
@@ -4617,7 +3718,7 @@ end)
 
 task.spawn(function()
     while task.wait() do
-        if bongkoc.toggles.killwindy and temptable.detected.windy and not bongkoc.toggles.traincrab and not temptable.converting and not temptable.started.commando and not temptable.planting and not temptable.started.vicious and not temptable.started.mondo and not bongkoc.toggles.trainsnail and not temptable.started.monsters and not game.Workspace.Toys["Ant Challenge"].Busy.Value then
+        if kocmoc.toggles.killwindy and temptable.detected.windy and not temptable.converting and not temptable.started.vicious and not temptable.started.mondo and not temptable.started.monsters and not game.Workspace.Toys["Ant Challenge"].Busy.Value then
             temptable.started.windy = true
             local windytokendb = false
             local windytokentp = false
@@ -4627,7 +3728,7 @@ task.spawn(function()
             disableall()
             local oldmask = rtsg()["EquippedAccessories"]["Hat"]
             maskequip("Demon Mask")
-            while bongkoc.toggles.killwindy and temptable.detected.windy do
+            while kocmoc.toggles.killwindy and temptable.detected.windy do
                 if not aw then
                     for i, v in pairs(workspace.Monsters:GetChildren()) do
                         if string.find(v.Name, "Windy") then
@@ -4695,17 +3796,9 @@ task.spawn(function()
     end
 end)
 
-game.Workspace.Collectibles.ChildAdded:Connect(function(token)
-    if bongkoc.toggles.trainsnail then farmcombattokens(token, CFrame.new(game.Workspace.FlowerZones["Stump Field"].Position.X, game.Workspace.FlowerZones["Stump Field"].Position.Y-10, game.Workspace.FlowerZones["Stump Field"].Position.Z), "snail") end   
-    if bongkoc.toggles.traincrab then farmcombattokens(token, CFrame.new(-256, 110, 475), "crab") end
-    --if bongkoc.toggles.farmfireflies then farmcombattokens(token, CFrame.new(0, 2, 0), "Firefly") end
-    --if bongkoc.toggles.farmsparkles then farmcombattokens(token, CFrame.new(0, 2, 0), "Sparkles") end
-    if bongkoc.toggles.traincommando then farmcombattokens(token, CFrame.new(520.758, 58.8, 161.651), "commando") end
-end)
-
 task.spawn(function()
-    while task.wait(0.03) do
-        if bongkoc.toggles.autodig then
+    while task.wait(0.2) do
+        if kocmoc.toggles.autodig then
             if player.Character then
                 local tool = player.Character:FindFirstChildOfClass("Tool")
                 if tool then
@@ -4714,13 +3807,11 @@ task.spawn(function()
                         clickEvent:FireServer()
                     end
                 end
-                if bongkoc.vars.autodigmode == "Collector Steal" then
-                    local onett = game.Workspace.NPCs.Onett.Onett["Porcelain Dipper"]:FindFirstChild("ClickEvent")
-                    --local spirit = game:GetService("Workspace").NPCs["Spirit Bear"]["Spirit Bear"]["Petal Wand"]:FindFirstChild("ClickEvent")
-                    if onett then
+                if kocmoc.vars.autodigmode == "Collector Steal" then
+                    local onnet = game.Workspace.NPCs.Onett.Onett["Porcelain Dipper"]:FindFirstChild("ClickEvent")
+                    if onnet then
                         task.wait()
-                        --spirit:FireServer()
-                        onett:FireServer()
+                        onnet:FireServer()
                     end
                 end
             end
@@ -4730,48 +3821,23 @@ end)
 
 task.spawn(function()
     while task.wait() do
-        --[[if bongkoc.toggles.traincrab and api.humanoidrootpart() then
+        if kocmoc.toggles.traincrab and api.humanoidrootpart() then
             api.humanoidrootpart().CFrame = CFrame.new(-307.52117919922, 110.11863250732, 467.86791992188)
-        end]]
-        --[[if bongkoc.toggles.traincommando and api.humanoidrootpart() then
-            api.humanoidrootpart().CFrame = CFrame.new(517.768, 58.75, 159.651)
-        end]]
-        --[[if bongkoc.toggles.trainsnail and api.humanoidrootpart() then
+        end
+        if kocmoc.toggles.trainsnail and api.humanoidrootpart() then
             local fd = game.Workspace.FlowerZones["Stump Field"]
             api.humanoidrootpart().CFrame = CFrame.new(
                 fd.Position.X,
                 fd.Position.Y - 20,
                 fd.Position.Z
             )
-        end]]
-        if bongkoc.toggles.farmtickets and not temptable.planting then
-            for k,v in next, game.workspace.Collectibles:GetChildren() do
-                if v.CFrame.YVector.Y == 1 then
-                    if v.Transparency == 0 then
-                        decal = v:FindFirstChildOfClass("Decal")
-                        if decal.Texture == "1674871631" or decal.Texture == "rbxassetid://1674871631" then
-                            api.humanoidrootpart().CFrame = v.CFrame
-                            break
-                        end
-                    end
-                end
-            end
         end
-        if bongkoc.toggles.farmleaves and not temptable.planting and not temptable.converting then
-            task.wait(3.85)
-            for i, v in next, game.Workspace.Flowers:GetDescendants() do
-                if v.Name == "LeafBurst" and v.Parent:IsA("Part") and v.Parent then
-                    api.humanoidrootpart().CFrame = CFrame.new(v.Parent.Position)
-                    break
-                end
-            end
-        end
-        if bongkoc.toggles.farmrares and not temptable.planting and not temptable.started.ant and not temptable.converting then
+        if kocmoc.toggles.farmrares and not temptable.started.crab and not temptable.started.ant then
             for k, v in next, game.workspace.Collectibles:GetChildren() do
                 if v.CFrame.YVector.Y == 1 then
                     if v.Transparency == 0 then
                         decal = v:FindFirstChildOfClass("Decal")
-                        for e, r in next, bongkoc.rares do
+                        for e, r in next, kocmoc.rares do
                             if decal.Texture == r or decal.Texture == "rbxassetid://" .. r then
                                 api.humanoidrootpart().CFrame = v.CFrame
                                 break
@@ -4784,57 +3850,7 @@ task.spawn(function()
     end
 end)
 
-function farmcombattokens(v, pos, type)
-    if type == "snail" then
-        if v.CFrame.YVector.Y == 1 and v.Transparency == 0 and v ~= nil and v.Parent ~= nil then
-            if (v.Position - pos.Position).Magnitude < 50 then
-                repeat
-                    task.wait()
-                    api.walkTo(v.Position)
-                until not v.Parent or v.CFrame.YVector.Y ~= 1 or not v
-                api.teleport(pos)
-            end
-        end
-    elseif type == "crab" then
-        if v.CFrame.YVector.Y == 1 and v.Transparency == 0 and v ~= nil and v.Parent ~= nil then
-            if (v.Position - pos.Position).Magnitude < 50 then
-                repeat
-                    task.wait()
-                    api.walkTo(v.Position)
-                until not v.Parent or v.CFrame.YVector.Y ~= 1 or not v
-                api.teleport(pos)
-            end
-        end
-    --[[elseif type == "Firefly" then
-        if v.CFrame.YVector.Y == 1 and v.Transparency == 0 and v ~= nil and v.Parent ~= nil then
-            if (v.Position - pos.Position).Magnitude < 25 then
-                repeat
-                    task.wait()
-                    api.walkTo(v.Position)
-                until not v.Parent or v.CFrame.YVector.Y ~= 1 or not v
-            end
-        end
-    elseif type == "Sparkles" then
-        if v.CFrame.YVector.Y == 1 and v.Transparency == 0 and v ~= nil and v.Parent ~= nil then
-            if (v.Position - pos.Position).Magnitude < 20 then
-                repeat
-                    task.wait()
-                    api.walkTo(v.Position)
-                until not v.Parent or v.CFrame.YVector.Y ~= 1 or not v
-            end
-        end]]
-    elseif type =="commando" then
-        if v.CFrame.YVector.Y == 1 and v.Transparency == 0 and v ~= nil and v.Parent ~= nil then
-            if (v.Position - pos.Position).Magnitude < 55 then
-                repeat
-                    task.wait()
-                    api.walkTo(v.Position)
-                until not v.Parent or v.CFrame.YVector.Y ~= 1 or not v
-                api.teleport(pos)
-            end
-        end
-    end
-end
+if kocmoc.toggles.farmtickets then for k,v in next, game.workspace.Collectibles:GetChildren() do if v.CFrame.YVector.Y == 1 then if v.Transparency == 0 then decal = v:FindFirstChildOfClass("Decal") if decal.Texture == '1674871631' or decal.Texture == "rbxassetid://1674871631" then game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = v.CFrame break end end end end end
 
 game.Workspace.Particles.Folder2.ChildAdded:Connect(function(child)
     if child.Name == "Sprout" then
@@ -4876,9 +3892,9 @@ game.Workspace.NPCBees.ChildRemoved:Connect(function(v)
 end)
 
 task.spawn(function()
-    while task.wait(0.05) do
-        if bongkoc.toggles.autofarm and not temptable.planting and not temptable.started.vicious and not temptable.started.windy and not temptable.started.ant and not bongkoc.toggles.traincrab then
-            if bongkoc.toggles.autosamovar then
+    while task.wait(0.1) do
+        if not temptable.converting then
+            if kocmoc.toggles.autosamovar then
                 game:GetService("ReplicatedStorage").Events.ToyEvent:FireServer("Samovar")
                 platformm = game.Workspace.Toys.Samovar.Platform
                 for i, v in pairs(game.Workspace.Collectibles:GetChildren()) do
@@ -4888,7 +3904,7 @@ task.spawn(function()
                     end
                 end
             end
-            if bongkoc.toggles.autostockings then
+            if kocmoc.toggles.autostockings then
                 game:GetService("ReplicatedStorage").Events.ToyEvent:FireServer("Stockings")
                 platformm = game.Workspace.Toys.Stockings.Platform
                 for i, v in pairs(game.Workspace.Collectibles:GetChildren()) do
@@ -4898,10 +3914,7 @@ task.spawn(function()
                     end
                 end
             end
-            if bongkoc.toggles.autosnowmachine then
-                game:GetService("ReplicatedStorage").Events.ToyEvent:FireServer("Snow Machine")
-            end
-            if bongkoc.toggles.autoonettart then
+            if kocmoc.toggles.autoonettart then
                 game:GetService("ReplicatedStorage").Events.ToyEvent:FireServer("Onett's Lid Art")
                 platformm = game.Workspace.Toys["Onett's Lid Art"]
                                 .Platform
@@ -4912,18 +3925,7 @@ task.spawn(function()
                     end
                 end
             end
-            --[[if temptable.collecting.collecthoneytoken then
-                game:GetService("ReplicatedStorage").Events.ToyEvent:FireServer("Honey Wreath")
-                platformm = game.Workspace.Toys["Honey Wreath"]
-                                .Platform
-                for i, v in pairs(game.Workspace.Collectibles:GetChildren()) do
-                    if (v.Position - platformm.Position).magnitude < 25 and
-                        v.CFrame.YVector.Y == 1 then
-                        api.humanoidrootpart().CFrame = v.CFrame
-                    end
-                end
-            end]]
-            if bongkoc.toggles.autocandles then
+            if kocmoc.toggles.autocandles then
                 game:GetService("ReplicatedStorage").Events.ToyEvent:FireServer("Honeyday Candles")
                 platformm = game.Workspace.Toys["Honeyday Candles"].Platform
                 for i, v in pairs(game.Workspace.Collectibles:GetChildren()) do
@@ -4933,7 +3935,7 @@ task.spawn(function()
                     end
                 end
             end
-            if bongkoc.toggles.autofeast then
+            if kocmoc.toggles.autofeast then
                 game:GetService("ReplicatedStorage").Events.ToyEvent:FireServer(
                     "Beesmas Feast")
                 platformm = game.Workspace.Toys["Beesmas Feast"]
@@ -4945,33 +3947,9 @@ task.spawn(function()
                     end
                 end
             end
-            if game.Players.LocalPlayer.Character:FindFirstChild("ProgressLabel",true) then
-                local pollenprglbl = game.Players.LocalPlayer.Character:FindFirstChild("ProgressLabel",true)
-                maxpollen = tonumber(pollenprglbl.Text:match("%d+$"))
-                local pollencount = game.Players.LocalPlayer.CoreStats.Pollen.Value
-                pollenpercentage = pollencount/maxpollen*100
-                if tonumber(temptable.pollenpercentage) >= tonumber(bongkoc.vars.convertat) and not bongkoc.toggles.disableconversion then
-                    if bongkoc.toggles.autohoneywreath then
-                        temptable.collecting.collecthoneytoken = true
-                        wait(10)
-                        temptable.collecting.collecthoneytoken = false
-                    end
-                end
-            end
-        end
-    end
-end)
-
-task.spawn(function()
-    while task.wait(.1) do
-        if temptable.collecting.collecthoneytoken then
-            game:GetService("ReplicatedStorage").Events.ToyEvent:FireServer("Honey Wreath")
-            platformm = game.Workspace.Toys["Honey Wreath"]
-                            .Platform
-            for i, v in pairs(game.Workspace.Collectibles:GetChildren()) do
-                if (v.Position - platformm.Position).magnitude < 25 and
-                    v.CFrame.YVector.Y == 1 then
-                    api.humanoidrootpart().CFrame = v.CFrame
+            if kocmoc.toggles.autodonate then
+                if isWindshrineOnCooldown() == false then
+                    donateToShrine(kocmoc.vars.donoItem, kocmoc.vars.donoAmount)
                 end
             end
         end
@@ -4982,74 +3960,57 @@ task.spawn(function()
     while task.wait(2) do
         temptable.runningfor = temptable.runningfor + 1
         temptable.honeycurrent = statsget().Totals.Honey
-        if bongkoc.toggles.honeystorm then
+        if kocmoc.toggles.honeystorm then
             game.ReplicatedStorage.Events.ToyEvent:FireServer("Honeystorm")
         end
-        if bongkoc.toggles.summonfreestickbug then
-            game:GetService("ReplicatedStorage").Events.SelectNPCOption:FireServer("StartFreeStickBugEvent")
-        end
-        if bongkoc.toggles.meteorshower then
-            game.ReplicatedStorage.Events.ToyEvent:FireServer("Mythic Meteor Shower")
-        end
-        if bongkoc.toggles.autospawnsprout then
-            game.ReplicatedStorage.Events.ToyEvent:FireServer("Sprout Summoner")
-        end
-        if bongkoc.toggles.collectgingerbreads then
+        if kocmoc.toggles.collectgingerbreads then
             game:GetService("ReplicatedStorage").Events.ToyEvent:FireServer("Gingerbread House")
         end
-        if bongkoc.toggles.autodispense then
-            if bongkoc.dispensesettings.rj then
+        if kocmoc.toggles.autodispense then
+            if kocmoc.dispensesettings.rj then
                 game:GetService("ReplicatedStorage").Events.ToyEvent:FireServer("Free Royal Jelly Dispenser")
             end
-            if bongkoc.dispensesettings.blub then
+            if kocmoc.dispensesettings.blub then
                 game:GetService("ReplicatedStorage").Events.ToyEvent:FireServer("Blueberry Dispenser")
             end
-            if bongkoc.dispensesettings.straw then
+            if kocmoc.dispensesettings.straw then
                 game:GetService("ReplicatedStorage").Events.ToyEvent:FireServer("Strawberry Dispenser")
             end
-            if bongkoc.dispensesettings.treat then
+            if kocmoc.dispensesettings.treat then
                 game:GetService("ReplicatedStorage").Events.ToyEvent:FireServer("Treat Dispenser")
             end
-            if bongkoc.dispensesettings.coconut then
+            if kocmoc.dispensesettings.coconut then
                 game:GetService("ReplicatedStorage").Events.ToyEvent:FireServer("Coconut Dispenser")
             end
-            if bongkoc.dispensesettings.glue then
+            if kocmoc.dispensesettings.glue then
                 game:GetService("ReplicatedStorage").Events.ToyEvent:FireServer("Glue Dispenser")
             end
         end
-        if bongkoc.toggles.autoboosters then
-            if bongkoc.dispensesettings.white then
+        if kocmoc.toggles.autoboosters then
+            if kocmoc.dispensesettings.white then
                 game.ReplicatedStorage.Events.ToyEvent:FireServer("Field Booster")
             end
-            if bongkoc.dispensesettings.red then
+            if kocmoc.dispensesettings.red then
                 game.ReplicatedStorage.Events.ToyEvent:FireServer("Red Field Booster")
             end
-            if bongkoc.dispensesettings.blue then
+            if kocmoc.dispensesettings.blue then
                 game.ReplicatedStorage.Events.ToyEvent:FireServer("Blue Field Booster")
             end
         end
-        if bongkoc.toggles.clock then
+        if kocmoc.toggles.clock then
             game:GetService("ReplicatedStorage").Events.ToyEvent:FireServer("Wealth Clock")
         end
-        if bongkoc.toggles.freeantpass then
+        if kocmoc.toggles.freeantpass then
             game:GetService("ReplicatedStorage").Events.ToyEvent:FireServer("Free Ant Pass Dispenser")
         end
-        if bongkoc.toggles.freerobopass then
-            game:GetService("ReplicatedStorage").Events.ToyEvent:FireServer("Free Robo Pass Dispenser")
-        end
-        if bongkoc.toggles.visualnight then
-            game:GetService("Lighting").TimeOfDay = "00:00:00"
-            game:GetService("Lighting").Brightness = 0.03
-            game:GetService("Lighting").ClockTime = 0
-        end
-        if bongkoc.toggles.autoquest then
+        if kocmoc.toggles.autoquest then
             local completeQuest = game.ReplicatedStorage.Events.CompleteQuestFromPool
             completeQuest:FireServer("Polar Bear")
             completeQuest:FireServer("Brown Bear 2")
             completeQuest:FireServer("Black Bear 2")
             completeQuest:FireServer("Bucko Bee")
             completeQuest:FireServer("Riley Bee")
-            if bongkoc.toggles.autoquesthoneybee then
+            if kocmoc.toggles.autoquesthoneybee then
                 completeQuest:FireServer("Honey Bee")
             end
             task.wait(1)
@@ -5059,26 +4020,24 @@ task.spawn(function()
             getQuest:FireServer("Black Bear 2")
             getQuest:FireServer("Bucko Bee")
             getQuest:FireServer("Riley Bee")
-            if bongkoc.toggles.autoquesthoneybee then
+            if kocmoc.toggles.autoquesthoneybee then
                 completeQuest:FireServer("Honey Bee")
             end
         end
-        local gained = temptable.honeycurrent - temptable.honeystart
-        gainedhoneylabel:UpdateText("Gained Honey: " .. api.suffixstring(gained))
-        windyfavor:UpdateText("Windy Favor: "..rtsg()["WindShrine"]["WindyFavor"])
+        gainedhoneylabel:UpdateText("Gained Honey: " .. api.suffixstring(temptable.honeycurrent - temptable.honeystart))
         uptimelabel:UpdateText("Uptime: " .. truncatetime(math.round(tick() - temptable.starttime)))
     end
 end)
 
 game:GetService("RunService").Heartbeat:connect(function()
-    if bongkoc.toggles.autoquest and player:FindFirstChild("PlayerGui") and player.PlayerGui:FindFirstChild("ScreenGui") and player.PlayerGui.ScreenGui:FindFirstChild("NPC") and player.PlayerGui.ScreenGui.NPC.Visible then
+    if kocmoc.toggles.autoquest and player:FindFirstChild("PlayerGui") and player.PlayerGui:FindFirstChild("ScreenGui") and player.PlayerGui.ScreenGui:FindFirstChild("NPC") and player.PlayerGui.ScreenGui.NPC.Visible then
         firesignal(player.PlayerGui.ScreenGui.NPC.ButtonOverlay.MouseButton1Click)
     end
-    if bongkoc.toggles.loopspeed and player.Character:FindFirstChild("Humanoid") then
-        player.Character.Humanoid.WalkSpeed = bongkoc.vars.walkspeed
+    if kocmoc.toggles.loopspeed and player.Character:FindFirstChild("Humanoid") then
+        player.Character.Humanoid.WalkSpeed = kocmoc.vars.walkspeed
     end
-    if bongkoc.toggles.loopjump and player.Character:FindFirstChild("Humanoid") then
-        player.Character.Humanoid.JumpPower = bongkoc.vars.jumppower
+    if kocmoc.toggles.loopjump and player.Character:FindFirstChild("Humanoid") then
+        player.Character.Humanoid.JumpPower = kocmoc.vars.jumppower
     end
 end)
 
@@ -5114,121 +4073,40 @@ player.Idled:connect(function()
     vu:Button2Up(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
 end)
 
-local canTeleport = true
-game:GetService("Workspace").Particles.Snowflakes.ChildAdded:Connect(function(snowflake)
-    if canTeleport == true and bongkoc.toggles.farmsnowflakes == true then
-        local hash = tostring(math.random(1,10000))
-        snowflake.Name = hash
-        canTeleport = false
-        repeat
-           task.wait()
-           getgenv().temptable.float = true
-           getgenv().temptable.sakatNoclip=true
-           tweenService:Create(api.humanoidrootpart(), TweenInfo.new(((api.humanoidrootpart().Position - snowflake.Position)).Magnitude / 80), {CFrame = snowflake.CFrame}):Play();
-           if (api.humanoidrootpart().Position - snowflake.Position).Magnitude <=15 then
-           api.humanoidrootpart().CFrame = snowflake.CFrame + Vector3.new(0,7.5,0)
+task.spawn(function()
+    while task.wait() do
+        if kocmoc.toggles.farmsnowflakes then
+            task.wait(3)
+            for i, v in next, temptable.tokenpath:GetChildren() do
+                if v:FindFirstChildOfClass("Decal") and
+                    v:FindFirstChildOfClass("Decal").Texture ==
+                    "rbxassetid://6087969886" and v.Transparency == 0 then
+                    api.humanoidrootpart().CFrame =
+                        CFrame.new(v.Position.X, v.Position.Y + 3, v.Position.Z)
+                    break
+                end
+            end
         end
-        until game:GetService("Workspace").Particles.Snowflakes:FindFirstChild(hash) == nil
-        getgenv().temptable.float = false
-        getgenv().sakatNoclip = false
-        task.wait(2)
-        canTeleport = true
     end
 end)
-
---[[function farmsnowflakes(v)
-    if bongkoc.toggles.farmsnowflakes then
-            temptable.collecting.snowflake = true
-        local SnowflakePosition = v.Position
-        api.teleport(CFrame.new(SnowflakePosition))
-        temptable.float = true
-        repeat
-            task.wait()
-        until not v.Parent or v.CFrame.YVector.Y ~= 1 
-        if temptable.float then temptable.float = false end
-        task.wait(1)
-        temptable.collecting.snowflake = false
-    end
-end]]
-
---[[function farmtickets(v)
-    if bongkoc.toggles.farmtickets then 
-        if v.CFrame.YVector.Y == 1 and v.Transparency == 0 and v ~= nil and v.Parent ~= nil then 
-            decal = v:FindFirstChildOfClass("Decal") 
-            if decal.Texture ~= "1674871631" and decal.Texture ~= "rbxassetid://1674871631" then return end
-            temptable.collecting.tickets = true
-            temptable.float = true
-            local reenablespeed = bongkoc.toggles.loopspeed
-            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(v.Position) * CFrame.new(math.random(20, 30), -3, math.random(-10, 10)) 
-            repeat 
-                task.wait() 
-                api.humanoid().WalkSpeed = 25
-                api.walkTo(v.Position)
-            until not v.Parent or v.CFrame.YVector.Y ~= 1 or not v.Transparency == 0 or (v.Position-api.humanoidrootpart().Position).Magnitude > 50
-            temptable.collecting.tickets = false
-            if temptable.float then temptable.float = false end
-            bongkoc.toggles.loopspeed = reenablespeed
-            task.wait(math.random(1, 5)/10)
-        end
-    end 
-end]]
 
 player.CharacterAdded:Connect(function(char)
     humanoid = char:WaitForChild("Humanoid")
     humanoid.Died:Connect(function()
-        if bongkoc.toggles.autofarm then
+        if kocmoc.toggles.autofarm then
             temptable.dead = true
-            bongkoc.toggles.autofarm = false
+            kocmoc.toggles.autofarm = false
             temptable.converting = false
             temptable.farmtoken = false
         end
         if temptable.dead then
             task.wait(25)
             temptable.dead = false
-            bongkoc.toggles.autofarm = true
+            kocmoc.toggles.autofarm = true
             temptable.converting = false
             temptable.tokensfarm = true
         end
     end)
-end)
-
---[[game.Workspace.Particles.Snowflakes.ChildAdded:Connect(function(Object)
-    if bongkoc.toggles.farmsnowflakes and temptable.collecting.snowflake == false then farmsnowflakes(Object) end
-end)]]
-
-task.spawn(function() while task.wait(1) do
-    if bongkoc.toggles.autoequipmask and not temptable.converting and not temptable.started.monsters and not temptable.started.windy and not temptable.planting and not temptable.started.vicious and not bongkoc.toggles.traincrab and not bongkoc.toggles.trainsnail and api.humanoidrootpart() then
-        if findFieldWithRay(api.humanoidrootpart().Position, Vector3.new(0,-90,0)) then
-            local MaskField = findFieldWithRay(api.humanoidrootpart().Position, Vector3.new(0,-90,0))
-            local FieldColor
-            if MaskField:FindFirstChild("ColorGroup") then FieldColor = MaskField:FindFirstChild("ColorGroup").Value else FieldColor = "White" end
-            if temptable.LastFieldColor == FieldColor then continue end
-            temptable.LastFieldColor = FieldColor
-            if FieldColor == "Blue" then
-                --maskequip("Bubble Mask")
-                maskequip("Diamond Mask")
-            elseif FieldColor == "Red" then
-                --maskequip("Fire Mask")
-                maskequip("Demon Mask")
-            else
-                --maskequip("Honey Mask")
-                maskequip("Gummy Mask")
-            end
-        end
-    end
-end end)
-
-game.Workspace.Particles:FindFirstChild("PopStars").ChildAdded:Connect(function(v)
-    task.wait(0.3)
-    if (v.Position - api.humanoidrootpart().Position).magnitude < 15 then
-        temptable.foundpopstar = true
-    end
-end)
-
-game.Workspace.Particles:FindFirstChild("PopStars").ChildRemoved:Connect(function(v)
-    if (v.Position - api.humanoidrootpart().Position).magnitude < 15 then
-        temptable.foundpopstar = false
-    end
 end)
 
 for _, v in next, game.workspace.Collectibles:GetChildren() do
@@ -5273,7 +4151,7 @@ task.spawn(function()
             end
         end
         
-        if not temptable.started.ant and not temptable.started.vicious and bongkoc.toggles.autofarm and not temptable.converting then
+        if not temptable.started.ant and not temptable.started.vicious and kocmoc.toggles.autofarm and not temptable.converting then
             if torso then
                 local bodygyro = torso:FindFirstChildOfClass("BodyGyro")
 
@@ -5308,7 +4186,7 @@ task.spawn(function()
 end)
 
 task.spawn(function()
-    while task.wait(0.45) do
+    while task.wait(1) do
         for i,v in pairs(game.Workspace.Planters:GetChildren()) do
             if v.Name == "PlanterBulb" then
                 local attach = v:FindFirstChild("Gui Attach")
@@ -5331,29 +4209,29 @@ task.spawn(function()
 end)
 
 task.spawn(function()
-    while task.wait(1.25) do
-        if bongkoc.toggles.docustomplanters then
+    while task.wait(5) do
+        if kocmoc.toggles.docustomplanters then
             local plantercycles = {
                 {
-                    {Planter = bongkoc.vars.customplanter11, Field = bongkoc.vars.customplanterfield11, Percent = bongkoc.vars.customplanterdelay11},
-                    {Planter = bongkoc.vars.customplanter12, Field = bongkoc.vars.customplanterfield12, Percent = bongkoc.vars.customplanterdelay12},
-                    {Planter = bongkoc.vars.customplanter13, Field = bongkoc.vars.customplanterfield13, Percent = bongkoc.vars.customplanterdelay13},
-                    {Planter = bongkoc.vars.customplanter14, Field = bongkoc.vars.customplanterfield14, Percent = bongkoc.vars.customplanterdelay14},
-                    {Planter = bongkoc.vars.customplanter15, Field = bongkoc.vars.customplanterfield15, Percent = bongkoc.vars.customplanterdelay15}
+                    {Planter = kocmoc.vars.customplanter11, Field = kocmoc.vars.customplanterfield11, Percent = kocmoc.vars.customplanterdelay11},
+                    {Planter = kocmoc.vars.customplanter12, Field = kocmoc.vars.customplanterfield12, Percent = kocmoc.vars.customplanterdelay12},
+                    {Planter = kocmoc.vars.customplanter13, Field = kocmoc.vars.customplanterfield13, Percent = kocmoc.vars.customplanterdelay13},
+                    {Planter = kocmoc.vars.customplanter14, Field = kocmoc.vars.customplanterfield14, Percent = kocmoc.vars.customplanterdelay14},
+                    {Planter = kocmoc.vars.customplanter15, Field = kocmoc.vars.customplanterfield15, Percent = kocmoc.vars.customplanterdelay15}
                 },
                 {
-                    {Planter = bongkoc.vars.customplanter21, Field = bongkoc.vars.customplanterfield21, Percent = bongkoc.vars.customplanterdelay21},
-                    {Planter = bongkoc.vars.customplanter22, Field = bongkoc.vars.customplanterfield22, Percent = bongkoc.vars.customplanterdelay22},
-                    {Planter = bongkoc.vars.customplanter23, Field = bongkoc.vars.customplanterfield23, Percent = bongkoc.vars.customplanterdelay23},
-                    {Planter = bongkoc.vars.customplanter24, Field = bongkoc.vars.customplanterfield24, Percent = bongkoc.vars.customplanterdelay24},
-                    {Planter = bongkoc.vars.customplanter25, Field = bongkoc.vars.customplanterfield25, Percent = bongkoc.vars.customplanterdelay25}
+                    {Planter = kocmoc.vars.customplanter21, Field = kocmoc.vars.customplanterfield21, Percent = kocmoc.vars.customplanterdelay21},
+                    {Planter = kocmoc.vars.customplanter22, Field = kocmoc.vars.customplanterfield22, Percent = kocmoc.vars.customplanterdelay22},
+                    {Planter = kocmoc.vars.customplanter23, Field = kocmoc.vars.customplanterfield23, Percent = kocmoc.vars.customplanterdelay23},
+                    {Planter = kocmoc.vars.customplanter24, Field = kocmoc.vars.customplanterfield24, Percent = kocmoc.vars.customplanterdelay24},
+                    {Planter = kocmoc.vars.customplanter25, Field = kocmoc.vars.customplanterfield25, Percent = kocmoc.vars.customplanterdelay25}
                 },
                 {
-                    {Planter = bongkoc.vars.customplanter31, Field = bongkoc.vars.customplanterfield31, Percent = bongkoc.vars.customplanterdelay31},
-                    {Planter = bongkoc.vars.customplanter32, Field = bongkoc.vars.customplanterfield32, Percent = bongkoc.vars.customplanterdelay32},
-                    {Planter = bongkoc.vars.customplanter33, Field = bongkoc.vars.customplanterfield33, Percent = bongkoc.vars.customplanterdelay33},
-                    {Planter = bongkoc.vars.customplanter34, Field = bongkoc.vars.customplanterfield34, Percent = bongkoc.vars.customplanterdelay34},
-                    {Planter = bongkoc.vars.customplanter35, Field = bongkoc.vars.customplanterfield35, Percent = bongkoc.vars.customplanterdelay35}
+                    {Planter = kocmoc.vars.customplanter31, Field = kocmoc.vars.customplanterfield31, Percent = kocmoc.vars.customplanterdelay31},
+                    {Planter = kocmoc.vars.customplanter32, Field = kocmoc.vars.customplanterfield32, Percent = kocmoc.vars.customplanterdelay32},
+                    {Planter = kocmoc.vars.customplanter33, Field = kocmoc.vars.customplanterfield33, Percent = kocmoc.vars.customplanterdelay33},
+                    {Planter = kocmoc.vars.customplanter34, Field = kocmoc.vars.customplanterfield34, Percent = kocmoc.vars.customplanterdelay34},
+                    {Planter = kocmoc.vars.customplanter35, Field = kocmoc.vars.customplanterfield35, Percent = kocmoc.vars.customplanterdelay35}
                 }
             }
 
@@ -5372,19 +4250,19 @@ task.spawn(function()
             end
 
             for i=1,3 do
-                if not isfile("bongkoc/plantercache/cycle"..i.."cache.file") then
+                if not isfile("kocmoc/plantercache/cycle"..i.."cache.file") then
                     for _,planter in pairs(fetchAllPlanters()) do
                         RequestCollectPlanter(planter)
                     end
-                    writefile("bongkoc/plantercache/cycle"..i.."cache.file", "1")
+                    writefile("kocmoc/plantercache/cycle"..i.."cache.file", "1")
                 end
             end
 
-            if not temptable.started.ant and bongkoc.toggles.autofarm and not temptable.converting and not temptable.started.monsters then
+            if not temptable.started.ant and kocmoc.toggles.autofarm and not temptable.converting and not temptable.started.monsters then
                 for i,cycle in pairs(plantercycles) do
                     if steps[i] == 0 then continue end
                     local planted = false
-                    local currentstep = isfile("bongkoc/plantercache/cycle"..i.."cache.file") and tonumber(readfile("bongkoc/plantercache/cycle"..i.."cache.file")) or 1
+                    local currentstep = isfile("kocmoc/plantercache/cycle"..i.."cache.file") and tonumber(readfile("kocmoc/plantercache/cycle"..i.."cache.file")) or 1
                     currentstep = (currentstep - 1) % steps[i] + 1
                     for j,step in pairs(cycle) do
                         if step.Percent and step.Planter and step.Planter:find("Planter") and step.Field and (step.Field:find("Field") or step.Field:find("Patch") or step.Field:find("Forest")) then
@@ -5407,37 +4285,32 @@ task.spawn(function()
                         local planter = cycle[currentstep].Planter
                         if planter == "The Planter Of Plenty" and GetItemListWithValue()["PlentyPlanter"] and GetItemListWithValue()["PlentyPlanter"] > 0 then
                             PlantPlanter(planter, cycle[currentstep].Field)
-                            writefile("bongkoc/plantercache/cycle"..i.."cache.file", tostring((currentstep - 1) % steps[i] + 2))
+                            writefile("kocmoc/plantercache/cycle"..i.."cache.file", tostring((currentstep - 1) % steps[i] + 2))
                         else
                             if GetItemListWithValue()[planter:gsub(" Planter", "") .. "Planter"] and GetItemListWithValue()[planter:gsub(" Planter", "") .. "Planter"] > 0 then
                                 PlantPlanter(planter:gsub(" Planter", ""), cycle[currentstep].Field)
-                                writefile("bongkoc/plantercache/cycle"..i.."cache.file", tostring((currentstep - 1) % steps[i] + 2))
+                                writefile("kocmoc/plantercache/cycle"..i.."cache.file", tostring((currentstep - 1) % steps[i] + 2))
                             end
                         end
                     end
                 end
             end
         else
-            NectarBlacklist["Invigorating"] = bongkoc.toggles.blacklistinvigorating and "Invigorating" or nil
-            NectarBlacklist["Comforting"] = bongkoc.toggles.blacklistcomforting and "Comforting" or nil
-            NectarBlacklist["Motivating"] = bongkoc.toggles.blacklistmotivating and "Motivating" or nil
-            NectarBlacklist["Refreshing"] = bongkoc.toggles.blacklistrefreshing and "Refreshing" or nil
-            NectarBlacklist["Satisfying"] = bongkoc.toggles.blacklistsatisfying and "Satisfying" or nil
+            NectarBlacklist["Invigorating"] = kocmoc.toggles.blacklistinvigorating and "Invigorating" or nil
+            NectarBlacklist["Comforting"] = kocmoc.toggles.blacklistcomforting and "Comforting" or nil
+            NectarBlacklist["Motivating"] = kocmoc.toggles.blacklistmotivating and "Motivating" or nil
+            NectarBlacklist["Refreshing"] = kocmoc.toggles.blacklistrefreshing and "Refreshing" or nil
+            NectarBlacklist["Satisfying"] = kocmoc.toggles.blacklistsatisfying and "Satisfying" or nil
 
-            planterData["Paper"] = not bongkoc.toggles.paperplanter and fullPlanterData["Paper"] or nil
-            planterData["Ticket"] = not bongkoc.toggles.ticketplanter and fullPlanterData["Ticket"] or nil
-            planterData["Plastic"] = not bongkoc.toggles.plasticplanter and fullPlanterData["Plastic"] or nil
-            planterData["Candy"] = not bongkoc.toggles.candyplanter and fullPlanterData["Candy"] or nil
-            planterData["Red Clay"] = not bongkoc.toggles.redclayplanter and fullPlanterData["Red Clay"] or nil
-            planterData["Blue Clay"] = not bongkoc.toggles.blueclayplanter and fullPlanterData["Blue Clay"] or nil
-            planterData["Tacky"] = not bongkoc.toggles.tackyplanter and fullPlanterData["Tacky"] or nil
-            planterData["Hydroponic"] = not bongkoc.toggles.hydroponicplanter and fullPlanterData["Hydroponic"] or nil
-            planterData["Heat-Treated"] = not bongkoc.toggles.heattreatedplanter and fullPlanterData["Heat-Treated"] or nil
-            planterData["Pesticide"] = not bongkoc.toggles.pesticideplanter and fullPlanterData["Pesticide"] or nil
-            planterData["Petal"] = not bongkoc.toggles.petalplanter and fullPlanterData["Petal"] or nil
-            planterData["Festive"] = not bongkoc.toggles.festiveplanter and fullPlanterData["Festive"] or nil
+            planterData["Plastic"] = not kocmoc.toggles.plasticplanter and fullPlanterData["Plastic"] or nil
+            planterData["Candy"] = not kocmoc.toggles.candyplanter and fullPlanterData["Candy"] or nil
+            planterData["Red Clay"] = not kocmoc.toggles.redclayplanter and fullPlanterData["Red Clay"] or nil
+            planterData["Blue Clay"] = not kocmoc.toggles.blueclayplanter and fullPlanterData["Blue Clay"] or nil
+            planterData["Tacky"] = not kocmoc.toggles.tackyplanter and fullPlanterData["Tacky"] or nil
+            planterData["Pesticide"] = not kocmoc.toggles.pesticideplanter and fullPlanterData["Pesticide"] or nil
+            planterData["Petal"] = not kocmoc.toggles.petalplanter and fullPlanterData["Petal"] or nil
 
-            if bongkoc.toggles.autoplanters and not temptable.started.ant and not temptable.started.vicious and not temptable.started.windy and not temptable.started.mondo and not temptable.collecting.collecthoneytoken and not temptable.started.monsters and bongkoc.toggles.autofarm and not temptable.converting then
+            if kocmoc.toggles.autoplanters and not temptable.started.ant and kocmoc.toggles.autofarm and not temptable.converting then
                 RequestCollectPlanters(fetchAllPlanters())
                 if #fetchAllPlanters() < 3 then
                     local LeastNectar = calculateLeastNectar(fetchNectarBlacklist())
@@ -5467,7 +4340,6 @@ local function getMonsterName(name)
         ["Beetle"] = "Rhino Beetle",
         ["Tunnel"] = "Tunnel Bear",
         ["Coco"] = "Coconut Crab",
-        ["Commando"] = "Commando Chick",
         ["King"] = "King Beetle",
         ["Stump"] = "Stump Snail",
         ["Were"] = "Werewolf"
@@ -5536,12 +4408,12 @@ end
 
 
 game:GetService("CoreGui").RobloxPromptGui.promptOverlay.ChildAdded:Connect(function(child)
-    if child.Name == "ErrorPrompt" and child:FindFirstChild("MessageArea") and child.MessageArea:FindFirstChild("ErrorFrame") then
-        if bongkoc.vars.webhookurl ~= "" and httpreq then
+    if child.Name == 'ErrorPrompt' and child:FindFirstChild('MessageArea') and child.MessageArea:FindFirstChild("ErrorFrame") then
+        if kocmoc.vars.webhookurl ~= "" and httpreq then
             task.wait(1)
-            disconnected(bongkoc.vars.webhookurl, bongkoc.vars.discordid, child.MessageArea.ErrorFrame.ErrorMessage.Text)
+            disconnected(kocmoc.vars.webhookurl, kocmoc.vars.discordid, child.MessageArea.ErrorFrame.ErrorMessage.Text)
         end
-        if bongkoc.toggles.shutdownkick then
+        if kocmoc.toggles.shutdownkick then
             game:Shutdown()
         end
     end
@@ -5555,10 +4427,10 @@ task.spawn(function()
             timeout = true
             task.wait(15)
             if timeout then
-                if bongkoc.vars.webhookurl ~= "" and httpreq then
-                    disconnected(bongkoc.vars.webhookurl, bongkoc.vars.discordid, "Server Timeout (Game Freeze)")
+                if kocmoc.vars.webhookurl ~= "" and httpreq then
+                    disconnected(kocmoc.vars.webhookurl, kocmoc.vars.discordid, "Server Timeout (Game Freeze)")
                 end
-                if bongkoc.toggles.shutdownkick then
+                if kocmoc.toggles.shutdownkick then
                     game:Shutdown()
                 end
             end
@@ -5577,9 +4449,9 @@ end)
 task.spawn(function()
     local timestamp = tick()
     while task.wait(0.1) do
-        if tick() - timestamp > bongkoc.vars.webhooktimer * 60 then
-            if httpreq and bongkoc.vars.webhookurl ~= "" and bongkoc.toggles.webhookupdates then
-                hourly(bongkoc.toggles.webhookping, bongkoc.vars.webhookurl, bongkoc.vars.discordid)
+        if tick() - timestamp > kocmoc.vars.webhooktimer * 60 then
+            if httpreq and kocmoc.vars.webhookurl ~= "" and kocmoc.toggles.webhookupdates then
+                hourly(kocmoc.toggles.webhookping, kocmoc.vars.webhookurl, kocmoc.vars.discordid)
             end
             timestamp = tick()
         end
@@ -5622,8 +4494,8 @@ task.spawn(function()
         local windUpd = panel2:CreateButton("Wind Shrine: 00:00", function()
             api.tween(1,
                       CFrame.new(
-                       game.Workspace.NPCs["Wind Shrine"]
-                           .Circle.Position + Vector3.new(0, 5, 0)))
+                          game.Workspace.NPCs["Wind Shrine"]
+                              .Circle.Position + Vector3.new(0, 5, 0)))
         end)
         local rfbUpd = panel2:CreateButton("Red Field Booster: 00:00",
                                            function()
@@ -5641,149 +4513,56 @@ task.spawn(function()
         end)
         local wfbUpd = panel2:CreateButton("White Field Booster: 00:00",
                                            function()
-            api.tween(1, 
-                      CFrame.new(
+            api.tween(1, CFrame.new(
                           game.Workspace.Toys["Field Booster"]
                               .Platform.Position + Vector3.new(0, 5, 0)))
         end)
-        local cocoDispUpd = panel2:CreateButton("Coconut Dispenser: 00:00", function()
+        local cocoDispUpd = panel2:CreateButton("Coconut Dispenser: 00:00",
+                                                function()
             api.tween(1,
                       CFrame.new(
-                       game.Workspace.Toys["Coconut Dispenser"]
-                           .Platform.Position + Vector3.new(0, 5, 0)))
+                          game.Workspace.Toys["Coconut Dispenser"]
+                              .Platform.Position + Vector3.new(0, 5, 0)))
         end)
-        local glueDispUpd = panel2:CreateButton("Glue Dispenser: 00:00", function()
+        local ic1 = panel2:CreateButton("Instant Converter A: 00:00", function()
             api.tween(1,
                       CFrame.new(
-                       game.Workspace.Toys["Glue Dispenser"]
-                           .Platform.Position + Vector3.new(0, 5, 0)))
-        end)
-        local emmaUpd = panel2:CreateButton("Extreme Memory Match: 00:00", function()
-            api.tween(1,
-                      CFrame.new(
-                       game.Workspace.Toys["Extreme Memory Match"]
-                           .Platform.Position + Vector3.new(0, 5, 0)))
-        end)
-        local nmmaUpd = panel2:CreateButton("Night Memory Match: 00:00", function()
-            api.tween(1,
-                      CFrame.new(
-                       game.Workspace.Toys["Night Memory Match"]
-                           .Platform.Position + Vector3.new(0, 5, 0)))
-        end)
-        local mmmaUpd = panel2:CreateButton("Mega Memory Match: 00:00", function()
-            api.tween(1,
-                      CFrame.new(
-                       game.Workspace.Toys["Mega Memory Match"]
-                           .Platform.Position + Vector3.new(0, 5, 0)))
-        end)
-        local ic1 = panel2:CreateButton("Instant Converter: 00:00", function()
-            api.tween(1,
-                      CFrame.new(
-                       game.Workspace.Toys["Instant Converter"]
-                           .Platform.Position + Vector3.new(0, 5, 0)))
+                          game.Workspace.Toys["Instant Converter"]
+                              .Platform.Position + Vector3.new(0, 5, 0)))
         end)
         local ic2 = panel2:CreateButton("Instant Converter B: 00:00", function()
             api.tween(1,
                       CFrame.new(
-                       game.Workspace.Toys["Instant Converter B"]
-                           .Platform.Position + Vector3.new(0, 5, 0)))
+                          game.Workspace.Toys["Instant Converter B"]
+                              .Platform.Position + Vector3.new(0, 5, 0)))
         end)
         local ic3 = panel2:CreateButton("Instant Converter C: 00:00", function()
             api.tween(1,
                       CFrame.new(
-                       game.Workspace.Toys["Instant Converter C"]
-                           .Platform.Position + Vector3.new(0, 5, 0)))
+                          game.Workspace.Toys["Instant Converter C"]
+                              .Platform.Position + Vector3.new(0, 5, 0)))
         end)
         local wcUpd = panel2:CreateButton("Wealth Clock: 00:00", function()
-            api.tween(1,
-                      CFrame.new(
-                       game.Workspace.Toys["Wealth Clock"]
-                           .Platform.Position + Vector3.new(0, 5, 0)))
-        end)
-        local hsmUpd = panel2:CreateButton("Honeystorm: 00:00", function()
-            api.tween(1,
-                      CFrame.new(
-                       game.Workspace.Toys.Honeystorm
-                           .Platform.Position + Vector3.new(0, 5, 0)))
+            api.tween(1, CFrame.new(
+                          game.Workspace.Toys["Wealth Clock"]
+                              .Platform.Position + Vector3.new(0, 5, 0)))
         end)
         local mmsUpd = panel2:CreateButton("Mythic Meteor Shower: 00:00", function()
-            api.tween(1,
-                      CFrame.new(
-                       game.Workspace.Toys["Mythic Meteor Shower"]
-                           .Platform.Position + Vector3.new(0, 5, 0)))
-        end)
-        local panel3 = hometab:CreateSection("🎄Beesmas Panel🎄")
-        local snoUpd = panel3:CreateButton("Snowbear: 00:00", function()
-            api.tween(1,
-                      CFrame.new(
-                       game.Workspace.Toys.Snowbear
-                           .Platform.Position + Vector3.new(0, 5, 0)))
-        end)
-        local honwUpd = panel3:CreateButton("Honey Wreath: 00:00", function()
-            api.tween(1,
-                      CFrame.new(
-                       game.Workspace.Toys["Honey Wreath"]
-                           .Platform.Position + Vector3.new(0, 5, 0)))
-        end)
-        local snomUpd = panel3:CreateButton("Snow Machine: 00:00", function()
-            api.tween(1,
-                      CFrame.new(
-                       game.Workspace.Toys["Snow Machine"]
-                           .Platform.Position + Vector3.new(0, 5, 0)))
-        end)
-        local samvUpd = panel3:CreateButton("Samovar: 00:00", function()
-            api.tween(1,
-                      CFrame.new(
-                       game.Workspace.Toys.Samovar
-                           .Platform.Position + Vector3.new(0, 5, 0)))
-        end)
-        local oneaUpd = panel3:CreateButton("Onett's Lid Art: 00:00", function()
-            api.tween(1,
-                      CFrame.new(
-                       game.Workspace.Toys["Onett's Lid Art"]
-                           .Platform.Position + Vector3.new(0, 5, 0)))
-        end)
-        local beefUpd = panel3:CreateButton("Beesmas Feast: 00:00", function()
-            api.tween(1,
-                      CFrame.new(
-                       game.Workspace.Toys["Beesmas Feast"]
-                           .Platform.Position + Vector3.new(0, 5, 0)))
-        end)
-        local honcUpd = panel3:CreateButton("Honeyday Candles: 00:00", function()
-            api.tween(1,
-                      CFrame.new(
-                       game.Workspace.Toys["Honeyday Candles"]
-                           .Platform.Position + Vector3.new(0, 5, 0)))
-        end)
-        local stocUpd = panel3:CreateButton("Stockings: 00:00", function()
-            api.tween(1, CFrame.new( game.Workspace.Toys.Stockings.Platform.Position + Vector3.new(0, 5, 0)))
+            api.tween(1, CFrame.new( game.Workspace.Toys["Mythic Meteor Shower"].Platform.Position + Vector3.new(0, 5, 0)))
         end)
         local utilities = {
             ["Red Field Booster"] = rfbUpd,
             ["Blue Field Booster"] = bfbUpd,
             ["Field Booster"] = wfbUpd,
             ["Coconut Dispenser"] = cocoDispUpd,
-            ["Glue Dispenser"] = glueDispUpd,
-            ["Extreme Memory Match"] = emmaUpd,
-            ["Night Memory Match"] = nmmaUpd,
-            ["Mega Memory Match"] = mmmaUpd,
             ["Instant Converter"] = ic1,
             ["Instant Converter B"] = ic2,
             ["Instant Converter C"] = ic3,
             ["Wealth Clock"] = wcUpd,
-            ["Honeystorm"] = hsmUpd,
-            ["Mythic Meteor Shower"] = mmsUpd,
-            ["Snowbear"] = snoUpd,
-            ["Honey Wreath"] = honwUpd,
-            ["Snow Machine"] = snomUpd,
-            ["Samovar"] = samvUpd,
-            ["Onett's Lid Art"] = oneaUpd,
-            ["Beesmas Feast"] = beefUpd,
-            ["Honeyday Candles"] = honcUpd,
-            ["Stockings"] = stocUpd
+            ["Mythic Meteor Shower"] = mmsUpd
         }
         while task.wait(1) do
-            if bongkoc.toggles.enablestatuspanel then
+            if kocmoc.toggles.enablestatuspanel then
                 for i, v in pairs(statusTable) do
                     if v[1] and v[2] then
                         v[1]:UpdateText(fetchVisualMonsterString(v[2]))
@@ -5795,7 +4574,7 @@ task.spawn(function()
                             if workspace.Clock.SurfaceGui:FindFirstChild("TextLabel").Text == "! ! !" then
                                 mob2:UpdateText("Mondo Chick: Ready")
                             else
-                                mob2:UpdateText("Mondo Chick: " .. string.gsub(string.gsub(workspace.Clock.SurfaceGui:FindFirstChild("TextLabel").Text, "", ""), "Mondo Chick:", ""))
+                                mob2:UpdateText("Mondo Chick: " .. string.gsub(string.gsub(workspace.Clock.SurfaceGui:FindFirstChild("TextLabel").Text, "\n", ""), "Mondo Chick:", ""))
                             end
                         end
                     end
@@ -5827,25 +4606,22 @@ task.spawn(function()
     end)
 end)
 
---if bongkoc.toggles.killstickbug then killstickbug:SetState(true) end
---if bongkoc.toggles.farmboostedfield then farmboostedfield:SetState(true) end
-
 if _G.autoload then
-    if isfile("bongkoc/BSS_" .. _G.autoload .. ".json") then
-        bongkoc = game:service("HttpService"):JSONDecode(readfile("bongkoc/BSS_" .. _G.autoload .. ".json"))
+    if isfile("kocmoc/BSS_" .. _G.autoload .. ".json") then
+        kocmoc = game:service("HttpService"):JSONDecode(readfile("kocmoc/BSS_" .. _G.autoload .. ".json"))
         for i,v in pairs(guiElements) do
             for j,k in pairs(v) do
                 local obj = k:GetObject()
                 local lastCharacters = obj.Name:reverse():sub(0, obj.Name:reverse():find(" ")):reverse()
-                if bongkoc[i][j] then
+                if kocmoc[i][j] then
                     if lastCharacters == " Dropdown" then
-                        obj.Container.Value.Text = bongkoc[i][j]
+                        obj.Container.Value.Text = kocmoc[i][j]
                     elseif lastCharacters == " Slider" then
                         task.spawn(function()
                             local Tween = game:GetService("TweenService"):Create(
                                 obj.Slider.Bar,
                                 TweenInfo.new(1),
-                                {Size = UDim2.new((tonumber(bongkoc[i][j]) - k:GetMin()) / (k:GetMax() - k:GetMin()), 0, 1, 0)}
+                                {Size = UDim2.new((tonumber(kocmoc[i][j]) - k:GetMin()) / (k:GetMax() - k:GetMin()), 0, 1, 0)}
                             )
                             Tween:Play()
                             local startStamp = tick()
@@ -5853,28 +4629,28 @@ if _G.autoload then
                             while tick() - startStamp < 1 do
                                 task.wait()
                                 local partial = tick() - startStamp
-                                local value = (startValue + ((tonumber(bongkoc[i][j]) - startValue) * partial))
+                                local value = (startValue + ((tonumber(kocmoc[i][j]) - startValue) * partial))
                                 obj.Value.PlaceholderText = math.round(value * 100) / 100
                             end
-                            obj.Value.PlaceholderText = tonumber(bongkoc[i][j])
+                            obj.Value.PlaceholderText = tonumber(kocmoc[i][j])
                         end)
                     elseif lastCharacters == " Toggle" then
-                        obj.Toggle.BackgroundColor3 = bongkoc[i][j] and Config.Color or Color3.fromRGB(50,50,50)
+                        obj.Toggle.BackgroundColor3 = kocmoc[i][j] and Config.Color or Color3.fromRGB(50,50,50)
                     elseif lastCharacters == " TextBox" then
-                        obj.Background.Input.Text = bongkoc[i][j]
+                        obj.Background.Input.Text = kocmoc[i][j]
                     end
                 end
             end
         end
     else
-        api.notify("Bongkoc " .. temptable.version, "No such config file!", 2)
+        api.notify("BongKoc " .. temptable.version, "No such config file!", 2)
     end
 
     local menuTabs = player.PlayerGui.ScreenGui.Menus.ChildTabs
     local set_thread_identity = syn and syn.set_thread_identity or setthreadcontext or setidentity
 
     if not set_thread_identity then
-        api.notify("Bongkoc " .. temptable.version, "your exploit only partially supports autoload!", 2)
+        api.notify("bongkoc " .. temptable.version, "your exploit only partially supports autoload!", 2)
     else
         for _,v in pairs(menuTabs:GetChildren()) do
             if v:FindFirstChild("Icon") and v.Icon.Image == "rbxassetid://1436835355" then
@@ -5886,103 +4662,24 @@ if _G.autoload then
     end
 end
 
-task.spawn(function()
-    while task.wait(0.0035) do
-        if bongkoc.toggles.usbtoggle then
-            if not game:GetService("Players").LocalPlayer.PlayerGui.ScreenGui.BeePopUp.TypeName.Text:match(bongkoc.vars.usb) then
-                temptable.feed(bongkoc.beessettings.general.x, bongkoc.beessettings.general.y, "RoyalJelly")
-            end
-        end
-        if bongkoc.toggles.ugb then
-            if not game:GetService("Players").LocalPlayer.PlayerGui.ScreenGui.BeePopUp.TypeName.Text:match("Gifted") then
-                temptable.feed(bongkoc.beessettings.general.x, bongkoc.beessettings.general.y, bongkoc.vars.selectedTreat)
-            end
-        end
-        if bongkoc.toggles.af then
-            temptable.feed(bongkoc.beessettings.general.x, bongkoc.beessettings.general.y, bongkoc.vars.selectedTreat, bongkoc.beessettings.general.amount)
-        end
-        if bongkoc.toggles.umb then
-            if not game:GetService("Players").LocalPlayer.PlayerGui.ScreenGui.BeePopUp.MutationFrame.MutationLabel.Text:match(bongkoc.vars.mutation) then
-                temptable.feed(bongkoc.beessettings.general.x, bongkoc.beessettings.general.y, "Bitterberry", bongkoc.beessettings.general.amount)
-            end
-        end
-    end
-end)
-
-game:GetService("Players").LocalPlayer.PlayerGui.ScreenGui.BeePopUp.MutationFrame.MutationLabel.Text = ""
-
---game:GetService("Workspace").Gates["5 Bee Gate"].Frame:Destroy()
---game:GetService("Workspace").Gates["15 Bee Gate"].Frame:Destroy()
---game:GetService("Workspace").Gates["25 Bee Gate"].Frame:Destroy()
-
 for _, part in next, workspace:FindFirstChild("FieldDecos"):GetDescendants() do
     if part:IsA("BasePart") then
         part.CanCollide = false
-        part.Transparency = part.Transparency < 0.75 and 0.75 or part.Transparency
+        part.Transparency = part.Transparency < 0.5 and 0.5 or part.Transparency
         task.wait()
     end
 end
 for _, part in next, workspace:FindFirstChild("Decorations"):GetDescendants() do
     if part:IsA("BasePart") and
-        (part.Parent.Name == "Bush" or part.Parent.Name == "Dandelion" or part.Parent.Name == "DiscoverSign" or part.Parent.Name == "HatchSign" or part.Parent.Name == "TicketSign" or part.Parent.Name == "Pine Tree" or part.Parent.Name == "SpiderCave" or part.Parent.Name == "Dandelion1" or part.Parent.Name == "Big Dandelion" or part.Parent.Name == "Blue Flower") then
+        (part.Parent.Name == "Bush" or part.Parent.Name == "Blue Flower") then
         part.CanCollide = false
-        part.Transparency = part.Transparency < 0.75 and 0.75 or part.Transparency
+        part.Transparency = part.Transparency < 0.5 and 0.5 or part.Transparency
         task.wait()
-    end
-end
-for _, Gate in next, workspace.Gates:GetDescendants() do 
-    if Gate:IsA("BasePart") and string.find(Gate.parent.Name, "Bee Gate") then 
-        Gate.CanCollide = false 
-        Gate.Transparency = Gate.Transparency < 0.5 and 0.5 or Gate.Transparency
-        task.wait() 
-    end 
-end
---[[for _, part in next, workspace:FindFirstChild("Gates"):GetDescendants() do
-    if part:IsA("BasePart") and
-        (part.Parent.Name == "5 Bee Gate.Frame" or part.Parent.Name == "10 Bee Gate" or part.Parent.Name == "15 Bee Gate" or part.Parent.Name == "20 Bee Gate" or part.Parent.Name == "25 Bee Gate" or part.Parent.Name == "30 Bee Gate" or part.Parent.Name == "35 Bee Gate") then
-        part.CanCollide = false
-        part.Transparency = part.Transparency < 0.65 and 0.65 or part.Transparency
-        task.wait()
-    end
-end]]
-for _, part in next, workspace.Map.Fences:GetDescendants() do
-    if part:IsA("BasePart") then
-        part.CanCollide = false
-        part.Transparency = part.Transparency < 0.7 and 0.7 or part.Transparency
-        task.wait()
-    end
-end
-for i, v in next, workspace:FindFirstChild("Invisible Walls"):GetDescendants() do
-    if v.Parent.Name == "InviswallVerticle" or "InviswallHorizon" then
-        v.CanCollide = false
-    end
-end
-for i, v in next, workspace.Decorations.Misc:GetDescendants() do
-    if v.Parent.Name == "Blue Flower 3"
-    or v.Parent.Name == "Blue Flower 2"
-    or v.Parent.Name == "Blue Flower 1"
-    or v.Parent.Name == "Blue Flower 4"
-    or v.Parent.Name == "Blue Flower 5" then
-        v.CanCollide = false
-        v.Transparency = 0.75
-    end
-end
-for i, v in next, workspace.Decorations.JumpGames:GetDescendants() do
-    if v.Parent.Name == "Mushroom" then
-        v.CanCollide = false
-        v.Transparency = 0.75
-    end
-end
-for i, v in next, workspace.Decorations.JumpGames:GetDescendants() do
-    if v.Parent.Name == "RockClimbBamboo" then
-        v.CanCollide = false
-        v.Transparency = 0.75
     end
 end
 for i, v in next, workspace.Decorations.Misc:GetDescendants() do
     if v.Parent.Name == "Mushroom" then
         v.CanCollide = false
-        v.Transparency = 0.75
+        v.Transparency = 0.5
     end
 end
-warn("LOADED BONGKOC!!")
